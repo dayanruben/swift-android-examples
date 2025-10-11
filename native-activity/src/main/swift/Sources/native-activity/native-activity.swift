@@ -188,8 +188,8 @@ public final class Engine {
 
         // Just fill the screen with a color
         let r = Float(state.x) / Float(max(1, width))
-        let g = state.angle
-        let b = Float(state.y) / Float(max(1, height))
+        let g = Float(state.y) / Float(max(1, height))
+        let b = state.angle
 
         glClearColor(r, g, b, 1)
         glClear(GLbitfield(GL_COLOR_BUFFER_BIT))
