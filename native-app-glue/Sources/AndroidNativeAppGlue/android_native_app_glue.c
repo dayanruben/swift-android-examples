@@ -1,4 +1,4 @@
-//===-- android_native_app_glue.c - Native Android app glue -----*- C++ -*-===//
+//===-- android_native_app_glue.c - Native Android app glue -------*- C -*-===//
 //
 // This source file is part of the Swift.org open source project
 //
