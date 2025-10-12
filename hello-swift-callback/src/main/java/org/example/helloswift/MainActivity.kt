@@ -16,7 +16,7 @@ import android.os.Bundle
 import android.widget.TextView
 import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatActivity
-import org.example.helloswift.R
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
@@ -59,9 +59,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
         runOnUiThread {
-            val ticks = "" + this@MainActivity.hour + ":" +
-                    this@MainActivity.minute + ":" +
-                    this@MainActivity.second
+            val ticks = String.format(
+                Locale.ENGLISH,
+                "%02d:%02d:%02d",
+                this@MainActivity.hour, this@MainActivity.minute, this@MainActivity.second
+            )
             this@MainActivity.tickView?.text = ticks
         }
     }
