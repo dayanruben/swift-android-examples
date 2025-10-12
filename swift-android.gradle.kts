@@ -1,4 +1,4 @@
-// File: scripts/swift-android.gradle.kts
+// File: swift-android.gradle.kts
 // Swift build script for Android projects using swiftly
 
 import org.gradle.api.tasks.Copy
