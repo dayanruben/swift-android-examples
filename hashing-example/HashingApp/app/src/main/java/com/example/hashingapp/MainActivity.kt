@@ -73,6 +73,7 @@ fun HashScreen() {
 
         Button(
             onClick = {
+                // This calls the Swift method `hash` from SwiftHashing.swift
                 hashResult.value = SwiftHashing.hash(input.value)
             }
         ) {

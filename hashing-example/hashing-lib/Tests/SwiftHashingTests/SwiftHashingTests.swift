@@ -13,6 +13,6 @@
 import Testing
 @testable import SwiftHashing
 
-@Test func example() async throws {
-    // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+@Test func hashing() throws {
+    #expect(hash("Hello from Swift!") == "SHA256 digest: a642e7aa389325056cdf5e54a2b6e0a0214b4810fe87e1370063d9e17f8d6ed6")
 }

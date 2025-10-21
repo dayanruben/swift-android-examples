@@ -19,7 +19,7 @@ The project is structured into two main parts:
 
 Before you can build and run this project, you need to have the following installed:
 
-* **Java Development Kit (JDK)**: Ensure the `JAVA_HOME` environment variable is set to your JDK installation path.
+* **Java Development Kit (JDK)**: We recommend using JDK 21. Ensure the `JAVA_HOME` environment variable is set to your JDK installation path.
 * **Swift SDK for Android**: You need to install the [Swift Android SDK](https://github.com/swift-android-sdk/swift-android-sdk/releases)
 
 ## Setup and Configuration

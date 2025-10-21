@@ -61,6 +61,9 @@ let package = Package(
         .product(name: "SwiftJava", package: "swift-java"),
         .product(name: "CSwiftJavaJNI", package: "swift-java"),
       ],
+      swiftSettings: [
+        .unsafeFlags(["-I\(javaIncludePath)", "-I\(javaPlatformIncludePath)"], .when(platforms: [.macOS, .linux, .windows]))
+      ],
       plugins: [
         .plugin(name: "JExtractSwiftPlugin", package: "swift-java")
       ]
