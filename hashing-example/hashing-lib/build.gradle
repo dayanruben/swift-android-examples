@@ -119,11 +119,11 @@ abis.each { abi, info ->
             println("Building Swift for ${abi} (${info.triple})...")
         }
 
-        outputs.dir(layout.projectDirectory.dir(".build/${info.triple}/debug"))
+        outputs.dir(layout.projectDirectory.dir(".build/${info.triple}/release"))
 
         workingDir = layout.projectDirectory
         commandLine "swift"
-        args("build", "--swift-sdk", info.triple)
+        args("build", "--swift-sdk", info.triple, "-c", "release")
     }
 
     buildSwiftAll.configure { dependsOn(task) }
@@ -134,7 +134,7 @@ def copyJniLibs = tasks.register("copyJniLibs", Copy) {
 
     abis.each { abi, info ->
         // Copy the built .so files
-        from(layout.projectDirectory.dir(".build/${info.triple}/debug")) {
+        from(layout.projectDirectory.dir(".build/${info.triple}/release")) {
             include("*.so")
             into(abi)
         }
