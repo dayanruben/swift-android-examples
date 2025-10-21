@@ -4,7 +4,7 @@ import groovy.json.JsonSlurper
 import kotlinx.serialization.json.*
 
 plugins {
-    id 'com.android.library' version '8.6.1'
+    alias(libs.plugins.android.library)
 }
 
 android {
@@ -26,6 +26,32 @@ dependencies {
     implementation('org.swift.swiftkit:swiftkit-core:1.0-SNAPSHOT')
 }
 
+// Helper function to get swiftly executable path
+def getSwiftlyPath() {
+    def fromConfig = project.findProperty("swiftly.path") ?: System.getenv("SWIFTLY_PATH")
+    if (fromConfig) {
+        return file(fromConfig)
+    }
+
+    // Try to find swiftly in common locations
+    def homeDir = System.getProperty("user.home")
+    def possiblePaths = [
+        "$homeDir/.swiftly/bin/swiftly",
+        "$homeDir/.local/share/swiftly/bin/swiftly",
+        "$homeDir/.local/bin/swiftly",
+        "/usr/local/bin/swiftly",
+        "/opt/homebrew/bin/swiftly",
+        "/root/.local/share/swiftly/bin/swiftly"
+    ]
+
+    for (path in possiblePaths) {
+        if (file(path).exists()) {
+            return path
+        }
+    }
+
+    throw new GradleException("Swift SDK path not found. Please set swiftly.path in the gradle.properties file or set SWIFTLY_PATH environment variable.")
+}
 def getSwiftSDKPath() {
     def fromConfig = project.findProperty("swift.sdk.path") ?: System.getenv("SWIFT_SDK_PATH")
     if (fromConfig) {
@@ -119,11 +145,11 @@ abis.each { abi, info ->
             println("Building Swift for ${abi} (${info.triple})...")
         }
 
-        outputs.dir(layout.projectDirectory.dir(".build/${info.triple}/release"))
+        outputs.dir(layout.projectDirectory.dir(".build/${info.triple}/debug"))
 
         workingDir = layout.projectDirectory
-        commandLine "swift"
-        args("build", "--swift-sdk", info.triple, "-c", "release")
+        executable(getSwiftlyPath())
+        args("run", "swift", "build", "+6.2", "--swift-sdk", info.triple)
     }
 
     buildSwiftAll.configure { dependsOn(task) }
@@ -134,7 +160,7 @@ def copyJniLibs = tasks.register("copyJniLibs", Copy) {
 
     abis.each { abi, info ->
         // Copy the built .so files
-        from(layout.projectDirectory.dir(".build/${info.triple}/release")) {
+        from(layout.projectDirectory.dir(".build/${info.triple}/debug")) {
             include("*.so")
             into(abi)
         }
@@ -146,7 +172,6 @@ def copyJniLibs = tasks.register("copyJniLibs", Copy) {
 
         doFirst {
             println("Copying Swift runtime libraries for ${abi}...")
-            println("${swiftSdkPath}/swift-android/swift-resources/usr/lib/${info.androidSdkLibDirectory}/android/libSomething.so")
         }
 
         // Copy the Swift runtime libraries

@@ -1,5 +1,6 @@
 pluginManagement {
     repositories {
+        mavenLocal()
         google {
             content {
                 includeGroupByRegex("com\\.android.*")
@@ -14,6 +15,7 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        mavenLocal()
         google()
         mavenCentral()
     }
@@ -24,3 +26,7 @@ include(":hello-swift")
 include(":hello-swift-callback")
 include(":hello-swift-library")
 include(":native-activity")
+include(":hashing-lib")
+project(":hashing-lib").projectDir = file("hashing-example/hashing-lib")
+include(":hashing-app")
+project(":hashing-app").projectDir = file("hashing-example/hashing-app")
