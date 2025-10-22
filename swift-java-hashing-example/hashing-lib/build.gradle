@@ -100,7 +100,8 @@ def swiftRuntimeLibs = [
     "swiftSynchronization"
 ]
 
-def sdkName = "swift-6.2-RELEASE-android-0.1.artifactbundle"
+def sdkName = "swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a-android-0.1.artifactbundle"
+def swiftVersion = "main-snapshot-2025-10-16"
 def minSdk = android.defaultConfig.minSdkVersion.apiLevel
 /**
  * Android ABIs and their Swift triple mappings
@@ -149,7 +150,7 @@ abis.each { abi, info ->
 
         workingDir = layout.projectDirectory
         executable(getSwiftlyPath())
-        args("run", "swift", "build", "+6.2", "--swift-sdk", info.triple)
+        args("run", "swift", "build", "+${swiftVersion}", "--swift-sdk", info.triple)
     }
 
     buildSwiftAll.configure { dependsOn(task) }
