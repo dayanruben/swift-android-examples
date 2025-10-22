@@ -7,15 +7,15 @@ import org.gradle.api.file.DuplicatesStrategy
 
 // Configuration class for Swift builds
 data class SwiftConfig(
-    var apiLevel: Int = 29, // Default API level
+    var apiLevel: Int = 28, // Default API level
     var debugAbiFilters: Set<String> = setOf("arm64-v8a"),
     var debugExtraBuildFlags: List<String> = emptyList(),
     var releaseAbiFilters: Set<String> = setOf("arm64-v8a", "armeabi-v7a", "x86_64"),
     var releaseExtraBuildFlags: List<String> = emptyList(),
     var swiftlyPath: String? = null, // Optional custom swiftly path
     var swiftSDKPath: String? = null, // Optional custom Swift SDK path
-    var swiftVersion: String = "6.2.0", // Swift version
-    var androidSdkVersion: String = "6.2-RELEASE-android-0.1" // SDK version
+    var swiftVersion: String = "main-snapshot-2025-10-16", // Swift version
+    var androidSdkVersion: String = "DEVELOPMENT-SNAPSHOT-2025-10-16-a-android-0.1" // SDK version
 )
 
 // Architecture definitions
