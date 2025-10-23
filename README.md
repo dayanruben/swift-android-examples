@@ -1,8 +1,8 @@
 # Swift Android Examples
 
-This repository contains sample applications that demonstrate how to use Swift with Android development using the [Swift Android SDK](https://www.swift.org/). Each sample showcases different integration patterns and use cases for Swift on Android.
+This repository contains example applications that demonstrate how to use Swift with Android development using the [Swift SDK for Android](https://swift.org/install). Each example showcases different integration patterns and use cases for Swift on Android.
 
-## Available Samples
+## Available Examples
 
 - **[hello-swift](hello-swift/)** - basic Swift integration that calls a Swift function.
 - **[hello-swift-callback](hello-swift-callback/)** - demonstrates bidirectional communication with Swift timer callbacks updating Android UI.
