@@ -1,6 +1,6 @@
 # Swift Android Examples
 
-This repository contains example applications that demonstrate how to use Swift with Android development using the [Swift SDK for Android](https://swift.org/install). Each example showcases different integration patterns and use cases for Swift on Android.
+This repository contains example applications that demonstrate how to use the [Swift SDK for Android](https://swift.org/install). Each example showcases different integration patterns for Swift on Android.
 
 ## Available Examples
 
