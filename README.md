@@ -1,15 +1,11 @@
 # Swift Android Examples
 
-This repository contains sample apps that use the [Swift Android SDK](https://www.swift.org/).
+This repository contains example applications that demonstrate how to use the [Swift SDK for Android](https://swift.org/install). Each example showcases different integration patterns for Swift on Android.
 
-# Build and run
+## Available Examples
 
-1. Setup Swift Android SDK
-2. Clone this repository
-3. Open the whole project in Android Studio
-4. Select the sample you want to run in the top bar (you may need to sync gradle first)
-5. Click the play button to run the sample
-
-You can also build the samples from the command line if you prefer. Use `./gradlew` build to build everything. For individual tasks, see `./gradlew tasks`. To see the tasks for an individual sample, run the tasks task for that directory. For example, `./gradlew :hello-swift:tasks` will show the tasks for the hello-swift app.
-
-You can build all sample apps for both the debug and release build types by running `./gradlew assemble`.
+- **[hello-swift](hello-swift/)** - basic Swift integration that calls a Swift function.
+- **[hello-swift-callback](hello-swift-callback/)** - demonstrates bidirectional communication with Swift timer callbacks updating Android UI.
+- **[hello-swift-library](hello-swift-library/)** - shows how to package Swift code as a reusable Android library component.
+- **[native-activity](native-activity/)** - complete native Android activity with OpenGL ES rendering written entirely in Swift.
+- **[swift-java-hashing-example](swift-java-hashing-example/)** - application that demonstrates how to call Swift code from an Android app with automatically generated Java wrappers and JNI code using [swift-java](https://github.com/swiftlang/swift-java).
