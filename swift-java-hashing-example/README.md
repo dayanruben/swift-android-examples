@@ -53,14 +53,9 @@ As the `swift-java` project does not yet publish the neccessary Java packages ne
 
 ### Only building the Swift Library (`hashing-lib`)
 
-1.  Navigate to the `hashing-lib` directory:
+1.  Run the Gradle assemble command from the root directory. This will compile the Swift code for all supported Android ABIs (arm64-v8a, armeabi-v7a, x86_64), run the `jextract` plugin, and package everything into an `.aar` file.
     ```bash
-    cd hashing-lib
+    ./gradlew :hashing-lib:assembleRelease
     ```
 
-2.  Run the Gradle assemble command. This will compile the Swift code for all supported Android ABIs (arm64-v8a, armeabi-v7a, x86_64), run the `jextract` plugin, and package everything into an `.aar` file.
-    ```bash
-    ./gradlew assembleRelease
-    ```
-
-3.  After a successful build, the Android library will be located at `hashing-lib/build/outputs/aar/hashing-lib-release.aar`.
+3.  After a successful build, the Android library will be located at `swift-java-hashing-example/hashing-lib/build/outputs/aar/hashing-lib-release.aar`.
