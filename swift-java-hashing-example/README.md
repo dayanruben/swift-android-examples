@@ -29,7 +29,7 @@ Before you can build and run this project, you need to have the following instal
 
 Currently these examples utilize very recent nightly Swift Android SDK versions. In order to install these, you can use Swiftly (the Swift toolchain installer):
 
-You can follow [these instructions](https://github.com/swiftlang/swift-org-website/pull/985/files) to install an appropriate Swift Android SDK.
+You can follow [these instructions](https://www.swift.org/documentation/articles/swift-android-getting-started.html) to install an appropriate Swift Android SDK.
 
 ### Publish `swift-java` packages locally
 As the `swift-java` project does not yet publish the necessary Java packages needed at runtime, we need to do it ourself, by performing the following steps:
