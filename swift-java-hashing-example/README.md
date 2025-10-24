@@ -36,7 +36,7 @@ As the `swift-java` project does not yet publish the necessary Java packages nee
 
 > Note: This step will not be necessary once swift-java publishes releases.
 
-In order to publish all artifacts from this library, we recommend installing and using JDK 25, because some parts of swift-java are built for most recent Java versions.
+In order to publish all artifacts from this library, you must use JDK 25, because some parts of swift-java are built for most recent Java versions. You will not have to use JDK 25 for the rest of the development process.
 A simple way to install and manage local Java installations is [sdkman](https://sdkman.io):
 
 > Note: You will _not_ have to use most recent Java versions for your Android app, and the example currently targets Java language version 11.
