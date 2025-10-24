@@ -41,10 +41,14 @@ A simple way to install and manage local Java installations is [sdkman](https://
 
 > Note: You will _not_ have to use most recent Java versions for your Android app, and the example currently targets Java language version 11.
 
+Here's how to install `sdkman`:
 ```bash
 curl -s "https://get.sdkman.io" | bash
-sdk install java 25.0.1-amzn --use # only in order to publish swift-java artifacts locally
+```
+Now restart the terminal so that the `sdk` utility is added to your path, and then set JDK 25 as your current Java install.
 
+```bash
+sdk install java 25.0.1-amzn --use # only in order to publish swift-java artifacts locally
 export JAVA_HOME="${HOME}//.sdkman/candidates/java/current"
 ```
 
