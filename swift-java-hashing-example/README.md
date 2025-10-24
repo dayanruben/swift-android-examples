@@ -32,11 +32,11 @@ Currently these examples utilize very recent nightly Swift Android SDK versions.
 You can follow [these instructions](https://www.swift.org/documentation/articles/swift-android-getting-started.html) to install an appropriate Swift SDK for Android.
 
 ### Publish `swift-java` packages locally
-As the `swift-java` project does not yet publish the necessary Java packages needed at runtime, we need to do it ourself, by performing the following steps:
+As the `swift-java` project does not yet publish the necessary Java packages needed at runtime, we need to do it ourselves, by performing the following steps:
 
 > Note: This step will not be necessary once swift-java publishes releases.
 
-In order to publish all artifacts from this library, you must use JDK 25, because some parts of swift-java are built for most recent Java versions. You will not have to use JDK 25 for the rest of the development process.
+In order to publish all artifacts from this library, you must use JDK 25, because some parts of swift-java are built for the most recent Java versions. You will not have to use JDK 25 for the rest of the development process.
 A simple way to install and manage local Java installations is [sdkman](https://sdkman.io):
 
 > Note: You will _not_ have to use most recent Java versions for your Android app, and the example currently targets Java language version 11.
