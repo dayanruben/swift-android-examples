@@ -19,14 +19,40 @@ The project is structured into two main parts:
 
 Before you can build and run this project, you need to have the following installed:
 
-* **Java Development Kit (JDK)**: We recommend using JDK 21. Ensure the `JAVA_HOME` environment variable is set to your JDK installation path.
+* **Java Development Kit (JDK)**: This example requires the use of JDK 25. This is only necessary to locally publish the swift-java dependencies, and will not be required in the future. To simplify the build steps, we recommend installing JDK 25 and following all the steps below using the same JDK. Ensure the `JAVA_HOME` environment variable is set to your JDK installation path.
 * **Swiftly**: You need to install [Swiftly](https://www.swift.org/install/)
 * **Swift SDK for Android**: You need to install the [Swift SDK for Android](https://swift.org/install)
 
 ## Setup and Configuration
 
+### Prepare Swift Android SDK and matching Swift
+
+Currently these examples utilize very recent nightly Swift Android SDK versions. In order to install these, you can use Swiftly (the Swift toolchain installer):
+
+You can follow [these instructions](https://www.swift.org/documentation/articles/swift-sdk-for-android-getting-started.html) to install an appropriate Swift SDK for Android.
+
 ### Publish `swift-java` packages locally
-As the `swift-java` project does not yet publish the neccessary Java packages needed at runtime, we need to do it ourself, by performing the following steps:
+As the `swift-java` project does not yet publish the necessary Java packages needed at runtime, we need to do it ourselves, by performing the following steps:
+
+> Note: This step will not be necessary once swift-java publishes releases.
+
+In order to publish all artifacts from this library, you must use JDK 25, because some parts of swift-java are built for the most recent Java versions. You will not have to use JDK 25 for the rest of the development process.
+A simple way to install and manage local Java installations is [sdkman](https://sdkman.io):
+
+> Note: You will _not_ have to use most recent Java versions for your Android app, and the example currently targets Java language version 11.
+
+Here's how to install `sdkman`:
+```bash
+curl -s "https://get.sdkman.io" | bash
+```
+Now restart the terminal so that the `sdk` utility is added to your path, and then set JDK 25 as your current Java install.
+
+```bash
+sdk install java 25.0.1-amzn --use # only in order to publish swift-java artifacts locally
+export JAVA_HOME="${HOME}//.sdkman/candidates/java/current"
+```
+
+Next, let's prepare and publish the swift-java support libraries:
 
 1.  Enter the `hashing-lib` directory
     ```bash
