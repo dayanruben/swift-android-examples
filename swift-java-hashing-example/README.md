@@ -25,8 +25,30 @@ Before you can build and run this project, you need to have the following instal
 
 ## Setup and Configuration
 
+### Prepare Swift Android SDK and matching Swift
+
+Currently these examples utilize very recent nightly Swift Android SDK versions. In order to install these, you can use Swiftly (the Swift toolchain installer):
+
+You can follow [these instructions](https://github.com/swiftlang/swift-org-website/pull/985/files) to install an appropriate Swift Android SDK.
+
 ### Publish `swift-java` packages locally
-As the `swift-java` project does not yet publish the neccessary Java packages needed at runtime, we need to do it ourself, by performing the following steps:
+As the `swift-java` project does not yet publish the necessary Java packages needed at runtime, we need to do it ourself, by performing the following steps:
+
+> Note: This step will not be necessary once swift-java publishes releases.
+
+In order to publish all artifacts from this library, we recommend installing and using JDK 25, because some parts of swift-java are built for most recent Java versions.
+A simple way to install and manage local Java installations is [sdkman](https://sdkman.io):
+
+> Note: You will _not_ have to use most recent Java versions for your Android app, and the example currently targets Java language version 11.
+
+```bash
+curl -s "https://get.sdkman.io" | bash
+sdk install java 25.0.1-amzn --use # only in order to publish swift-java artifacts locally
+
+export JAVA_HOME="${HOME}//.sdkman/candidates/java/current"
+```
+
+Next, let's prepare and publish the swift-java support libraries:
 
 1.  Enter the `hashing-lib` directory
     ```bash
