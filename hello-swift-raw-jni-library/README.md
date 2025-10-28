@@ -1,6 +1,6 @@
 # Swift as Android Library
 
-This example demonstrates how to package Swift code as a reusable Android library. It shows how to create a Swift library that can be consumed by other Android applications, making Swift functionality available as a standard Android library component.
+This example demonstrates how to package Swift code as a reusable Android library, without the use of swift-java interoperability support, just by using raw JNI. It shows how to create a Swift library that can be consumed by other Android applications, making Swift functionality available as a standard Android library component.
 
 ## Overview
 
@@ -21,7 +21,7 @@ Before you can build and run this project, you need to have the following instal
 
 1. Open the `swift-android-examples` project in Android Studio.
 
-2. Select the `hello-swift-library` Gradle target.
+2. Select the `hello-swift-raw-jni-library` Gradle target.
 
 3. Build the library (it doesn't have a runnable app).
 
@@ -29,19 +29,19 @@ Before you can build and run this project, you need to have the following instal
 
 ```bash
 # Build the library
-./gradlew :hello-swift-library:assembleDebug
+./gradlew :hello-swift-raw-jni-library:assembleDebug
 
 # Build the AAR file
-./gradlew :hello-swift-library:bundleReleaseAar
+./gradlew :hello-swift-raw-jni-library:bundleReleaseAar
 ```
 
-After a successful build, the Android library will be located at `hello-swift-library/build/outputs/aar/hello-swift-library-release.aar`.
+After a successful build, the Android library will be located at `hello-swift-raw-jni-library/build/outputs/aar/hello-swift-raw-jni-library-release.aar`.
 
 ## Using the library in other projects
 
 1. Copy the generated AAR file to your project's `libs/` directory
 2. Add the dependency in your `build.gradle`:
    ```gradle
-   implementation files('libs/hello-swift-library-release.aar')
+   implementation files('libs/hello-swift-raw-jni-library-release.aar')
    ```
 3. Use the `SwiftLibrary` class in your code

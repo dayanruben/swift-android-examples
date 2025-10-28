@@ -4,11 +4,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "hello-swift-callback",
+    name: "hello-swift-raw-jni-callback",
     products: [
-        .library(name: "hello-swift-callback", type: .dynamic, targets: ["hello-swift-callback"]),
+        .library(name: "hello-swift-raw-jni-callback", type: .dynamic, targets: ["hello-swift-raw-jni-callback"]),
     ],
     targets: [
-        .target(name: "hello-swift-callback")
+        .target(name: "hello-swift-raw-jni-callback")
     ]
 )

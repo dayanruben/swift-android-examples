@@ -30,7 +30,7 @@ struct JMethodID: @unchecked Sendable {
     let id: jmethodID
 }
 
-let queue = DispatchQueue(label: "hello-swift-callback")
+let queue = DispatchQueue(label: "hello-swift-raw-jni-callback")
 var workItem: DispatchWorkItem? = nil
 var activityRef: jobject? = nil
 

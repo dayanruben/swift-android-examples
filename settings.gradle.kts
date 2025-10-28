@@ -22,11 +22,17 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Swift Android Examples"
-include(":hello-swift")
-include(":hello-swift-callback")
-include(":hello-swift-library")
+
+// swift-java examples
+include(":hello-swift-java-hashing-lib")
+project(":hello-swift-java-hashing-lib").projectDir = file("hello-swift-java/hashing-lib")
+include(":hello-swift-java-hashing-app")
+project(":hello-swift-java-hashing-app").projectDir = file("hello-swift-java/hashing-app")
+
+// raw-jni examples
+include(":hello-swift-raw-jni")
+include(":hello-swift-raw-jni-callback")
+include(":hello-swift-raw-jni-library")
+
+// native-only examples
 include(":native-activity")
-include(":hashing-lib")
-project(":hashing-lib").projectDir = file("swift-java-hashing-example/hashing-lib")
-include(":hashing-app")
-project(":hashing-app").projectDir = file("swift-java-hashing-example/hashing-app")

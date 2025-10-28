@@ -1,6 +1,6 @@
-# Swift to Android Callbacks
+# Swift to Android Callbacks using Raw JNI
 
-This example demonstrates bidirectional communication between Swift and Android. The Swift code runs a timer that calls back to Android every second to update the UI with the current time (HH:MM:SS format).
+This example demonstrates bidirectional communication between Swift and Android, without the use of swift-java interoperability support, just by using raw JNI. The Swift code runs a timer that calls back to Android every second to update the UI with the current time (HH:MM:SS format).
 
 ![Screenshot](screenshot.png)
 
@@ -23,7 +23,7 @@ Before you can build and run this project, you need to have the following instal
 
 1. Open the `swift-android-examples` project in Android Studio.
 
-2. Select the `hello-swift-callback` Gradle target.
+2. Select the `hello-swift-raw-jni-callback` Gradle target.
 
 3. Run the app on an Android emulator or a physical device.
 
@@ -31,8 +31,8 @@ Before you can build and run this project, you need to have the following instal
 
 ```bash
 # Build the example
-./gradlew :hello-swift-callback:assembleDebug
+./gradlew :hello-swift-raw-jni-callback:assembleDebug
 
 # Install on device/emulator
-./gradlew :hello-swift-callback:installDebug
+./gradlew :hello-swift-raw-jni-callback:installDebug
 ```

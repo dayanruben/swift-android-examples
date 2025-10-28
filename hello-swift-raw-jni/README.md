@@ -1,6 +1,6 @@
 # Basic Swift Integration
 
-This example demonstrates the most basic Swift integration pattern with Android. The app calls a Swift function that returns a "Hello from Swift ❤️" message and displays it in the Android UI.
+This example demonstrates the most basic Swift integration pattern with Android, without the use of swift-java interoperability support, just by using raw JNI. The app calls a Swift function that returns a "Hello from Swift ❤️" message and displays it in the Android UI.
 
 ![Screenshot](screenshot.png)
 
@@ -23,7 +23,7 @@ Before you can build and run this project, you need to have the following instal
 
 1. Open the `swift-android-examples` project in Android Studio.
 
-2. Select the `hello-swift` Gradle target.
+2. Select the `hello-swift-raw-jni` Gradle target.
 
 3. Run the app on an Android emulator or a physical device.
 
@@ -31,8 +31,8 @@ Before you can build and run this project, you need to have the following instal
 
 ```bash
 # Build the example
-./gradlew :hello-swift:assembleDebug
+./gradlew :hello-swift-raw-jni:assembleDebug
 
 # Install on device/emulator
-./gradlew :hello-swift:installDebug
+./gradlew :hello-swift-raw-jni:installDebug
 ```
