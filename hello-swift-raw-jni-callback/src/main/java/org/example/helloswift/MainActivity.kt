@@ -72,9 +72,9 @@ class MainActivity : AppCompatActivity() {
     external fun stopTicks()
 
     companion object {
-        // Used to load the 'hello-swift-callback' library on application startup.
+        // Used to load the 'hello-swift-raw-jni-callback' library on application startup.
         init {
-            System.loadLibrary("hello-swift-callback")
+            System.loadLibrary("hello-swift-raw-jni-callback")
         }
     }
 }

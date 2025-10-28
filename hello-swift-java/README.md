@@ -1,9 +1,8 @@
 # swift-java on Android
 
 This example contains a sample Android application that demonstrates how to call Swift code from a Android app. 
-The example consists of an Android application (`hashing-app`) and a Swift library (`hashing-lib`) that performs a SHA256 hash on a given string.
-The Swift library uses [swift-java](https://github.com/swiftlang/swift-java) and the new JNI mode to automatically
-generate Java wrappers for calling into the Swift library.
+
+The example consists of an Android application (`hashing-app`) and a Swift library (`hashing-lib`) that performs a SHA256 hash on a given string. The Swift library uses [swift-java](https://github.com/swiftlang/swift-java) and the new JNI mode to **automatically generate Java wrappers** for calling into the Swift library.
 
 ![IDE Screenshot](resources/ide.png)
 
@@ -27,7 +26,7 @@ Before you can build and run this project, you need to have the following instal
 
 ### Prepare Swift Android SDK and matching Swift
 
-Currently these examples utilize very recent nightly Swift Android SDK versions. In order to install these, you can use Swiftly (the Swift toolchain installer):
+Currently, these examples utilize very recent nightly Swift Android SDK versions. In order to install these, you can use Swiftly (the Swift toolchain installer):
 
 You can follow [these instructions](https://www.swift.org/documentation/articles/swift-sdk-for-android-getting-started.html) to install an appropriate Swift SDK for Android.
 

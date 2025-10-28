@@ -18,7 +18,7 @@ class SwiftLibrary {
 
     companion object {
         init {
-            System.loadLibrary("hello-swift-library")
+            System.loadLibrary("hello-swift-raw-jni-library")
         }
     }
 }
