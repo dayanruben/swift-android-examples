@@ -80,7 +80,7 @@ Next, let's prepare and publish the swift-java support libraries:
 
 1.  Run the Gradle assemble command from the root directory. This will compile the Swift code for all supported Android ABIs (arm64-v8a, armeabi-v7a, x86_64), run the `jextract` plugin, and package everything into an `.aar` file.
     ```bash
-    ./gradlew :hashing-lib:assembleRelease
+    ./gradlew :hello-swift-java-hashing-lib:assembleRelease
     ```
 
 3.  After a successful build, the Android library will be located at `swift-java-hashing-example/hashing-lib/build/outputs/aar/hashing-lib-release.aar`.
