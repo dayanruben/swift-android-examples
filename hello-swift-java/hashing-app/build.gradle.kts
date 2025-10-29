@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation("org.swift.swiftkit:swiftkit-core:1.0-SNAPSHOT")
     implementation(project(":hello-swift-java-hashing-lib"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
