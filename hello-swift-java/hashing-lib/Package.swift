@@ -60,6 +60,7 @@ let package = Package(
         .product(name: "Crypto", package: "swift-crypto"),
         .product(name: "SwiftJava", package: "swift-java"),
         .product(name: "CSwiftJavaJNI", package: "swift-java"),
+        .product(name: "SwiftJavaRuntimeSupport", package: "swift-java"),
       ],
       swiftSettings: [
         .unsafeFlags(["-I\(javaIncludePath)", "-I\(javaPlatformIncludePath)"], .when(platforms: [.macOS, .linux, .windows]))
