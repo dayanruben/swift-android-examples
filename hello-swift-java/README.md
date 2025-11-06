@@ -83,4 +83,53 @@ Next, let's prepare and publish the swift-java support libraries:
     ./gradlew :hello-swift-java-hashing-lib:assembleRelease
     ```
 
-3.  After a successful build, the Android library will be located at `swift-java-hashing-example/hashing-lib/build/outputs/aar/hashing-lib-release.aar`.
+2.  After a successful build, the Android library will be located at `swift-java-hashing-example/hashing-lib/build/outputs/aar/hashing-lib-release.aar`.
+
+
+## Exploring `swift-java`
+We encourage exploring `swift-java` by writing Swift code to the file `hello-swift-java/hashing-lib/Sources/SwiftHashing/SwiftHashing.swift` and building the `hashing-app` target.
+
+Once the `hashing-app` build completes, the newly generated Java code will be available to use in the Android project.
+
+While exploring, some errors might occur. Following is a list of errors and how to troubleshoot them.
+>⚠️⚠️ These are temporary and will not be required once the gradle plugin is automated ⚠️⚠️
+
+___
+### Swift/Java not available for use once Android build completes:
+If after adding new code to `SwiftHashing.swift` the same is not available on Android after a build, please delete the swift `.build` folder located at `hello-swift-java/hashing-lib/.build` (Attention to the dot before the folder name `.build`)
+
+Build the Android `hashing-app` target again and the code should be avilable.
+
+---
+### Crash: Library not found
+If the code added to `SwiftHashing.swift` introduces a new library dependency, and the app is crashing with the following error:\
+`Caused by: java.lang.UnsatisfiedLinkError: dlopen failed: library "libswiftObservation.so" not found`
+1. Locate the file `build.gradle (Module :hello-swift-java-hashing-lib`
+2. Locate the defined list of libraries `def swiftRuntimeLibs`
+3. Include the library specified in the error message
+
+In the example log above, `Observation` cannot be found. This is how the `swiftRuntimeLibs` show look after including the missing library.
+```
+def swiftRuntimeLibs = [
+    "swiftCore",
+    "swift_Concurrency",
+    "swift_StringProcessing",
+    "swift_RegexParser",
+    "swift_Builtin_float",
+    "swift_math",
+    "swiftAndroid",
+    "dispatch",
+    "BlocksRuntime",
+    "swiftSwiftOnoneSupport",
+    "swiftDispatch",
+    "Foundation",
+    "FoundationEssentials",
+    "FoundationInternationalization",
+    "_FoundationICU",
+    "swiftSynchronization",
+    "swiftObservation", <===================== NEW LIBRARY
+]
+```
+
+
+
