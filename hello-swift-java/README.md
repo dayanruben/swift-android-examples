@@ -87,7 +87,11 @@ Next, let's prepare and publish the swift-java support libraries:
 
 
 ## Exploring `swift-java`
-We encourage exploring `swift-java` by writing Swift code to the file `hello-swift-java/hashing-lib/Sources/SwiftHashing/SwiftHashing.swift` and building the `hashing-app` target.
+We encourage exploring `swift-java` by writing Swift code to the file `hello-swift-java/hashing-lib/Sources/SwiftHashing/SwiftHashing.swift` and building the `hashing-app` target.\
+> [!TIP]
+> The list of supported features can be found at:\
+> https://swiftpackageindex.com/swiftlang/swift-java/main/documentation/swiftjavadocumentation/supportedfeatures#JExtract-calling-Swift-from-Java\
+
 
 Once the `hashing-app` build completes, the newly generated Java code will be available to use in the Android project.
 
