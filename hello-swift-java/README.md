@@ -95,18 +95,21 @@ We encourage exploring `swift-java` by writing Swift code to the file `hello-swi
 
 Once the `hashing-app` build completes, the newly generated Java code will be available to use in the Android project.
 
-While exploring, some errors might occur. Following is a list of errors and how to troubleshoot them.
->⚠️⚠️ These are temporary and will not be required once the gradle plugin is automated ⚠️⚠️
+## Troubleshooting
+
+> Most of these issues are temporary and will be resolved in the future as the swift-java project matures and automates more of the build steps.
+
 
 ___
-### Swift/Java not available for use once Android build completes:
+### New Swift Code is not available in Java once Android build completes:
 If after adding new code to `SwiftHashing.swift` the same is not available on Android after a build, please delete the swift `.build` folder located at `hello-swift-java/hashing-lib/.build` (Attention to the dot before the folder name `.build`)
 
-Build the Android `hashing-app` target again and the code should be avilable.
+Build the Android `hashing-app` target again and the Swift API should be available in Java.
+If the code is still not available, the `swift-java` project might not support the specific Swift code. Please make sure the feature is listed as supported in the [Supported Features](https://swiftpackageindex.com/swiftlang/swift-java/main/documentation/swiftjavadocumentation/supportedfeatures#JExtract-calling-Swift-from-Java) documentation.
 
 ---
-### Crash: Library not found
-If the code added to `SwiftHashing.swift` introduces a new library dependency, and the app is crashing with the following error:\
+#### Crash: Library not found
+If the code added to `SwiftHashing.swift` introduces a new library dependency, forexample `import Observation`, and the app crashes with the following error:\
 `Caused by: java.lang.UnsatisfiedLinkError: dlopen failed: library "libswiftObservation.so" not found`
 1. Locate the file `build.gradle (Module :hello-swift-java-hashing-lib`
 2. Locate the defined list of libraries `def swiftRuntimeLibs`
