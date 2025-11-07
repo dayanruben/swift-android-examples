@@ -63,6 +63,7 @@ let package = Package(
         .product(name: "SwiftJavaRuntimeSupport", package: "swift-java"),
       ],
       swiftSettings: [
+        .swiftLanguageMode(.v5),
         .unsafeFlags(["-I\(javaIncludePath)", "-I\(javaPlatformIncludePath)"], .when(platforms: [.macOS, .linux, .windows]))
       ],
       plugins: [
