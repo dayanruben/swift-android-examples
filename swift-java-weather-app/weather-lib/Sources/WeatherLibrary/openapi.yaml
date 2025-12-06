@@ -447,15 +447,15 @@ components:
           type: string
         temperature:
           type: number
-        windspeed:
+        wind_speed:
           type: number
-        winddirection:
+        wind_direction:
           type: number
-        weathercode:
+        weather_code:
           type: integer
       required:
         - time
         - temperature
-        - windspeed
-        - winddirection
-        - weathercode
+        - wind_speed
+        - wind_direction
+        - weather_code
