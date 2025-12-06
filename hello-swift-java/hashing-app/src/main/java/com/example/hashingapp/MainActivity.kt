@@ -35,7 +35,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.hashingapp.ui.theme.HashingAppTheme
 import com.example.swifthashing.SwiftHashing
-import com.example.weatherclient.WeaterClient;
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
