@@ -14,8 +14,8 @@ data class SwiftConfig(
     var releaseExtraBuildFlags: List<String> = emptyList(),
     var swiftlyPath: String? = null, // Optional custom swiftly path
     var swiftSDKPath: String? = null, // Optional custom Swift SDK path
-    var swiftVersion: String = "main-snapshot-2026-01-07", // Swift version
-    var androidSdkVersion: String = "DEVELOPMENT-SNAPSHOT-2026-01-07-a_android" // SDK version
+    var swiftVersion: String = "6.3-DEVELOPMENT-SNAPSHOT-2026-03-05", // Swift version
+    var androidSdkVersion: String = "swift-6.3-DEVELOPMENT-SNAPSHOT-2026-03-05-a_android" // SDK version
 )
 
 // Architecture definitions
