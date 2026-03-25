@@ -89,8 +89,8 @@ def swiftRuntimeLibs = [
     "swiftSynchronization"
 ]
 
-def sdkName = "swift-6.3-DEVELOPMENT-SNAPSHOT-2026-03-05-a_android.artifactbundle"
-def swiftVersion = "6.3-DEVELOPMENT-SNAPSHOT-2026-03-05"
+def sdkName = "swift-6.3-RELEASE_android.artifactbundle"
+def swiftVersion = "6.3"
 def minSdk = android.defaultConfig.minSdkVersion.apiLevel
 
 def abis = [

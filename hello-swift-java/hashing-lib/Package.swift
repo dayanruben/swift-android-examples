@@ -15,7 +15,7 @@ let package = Package(
     )
   ],
   dependencies: [
-    .package(url: "https://github.com/swiftlang/swift-java", branch: "main"),
+    .package(url: "https://github.com/swiftlang/swift-java", from: "0.1.2"),
     .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0"..<"4.0.0"),
   ],
   targets: [

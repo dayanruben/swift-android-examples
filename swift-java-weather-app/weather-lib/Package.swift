@@ -15,7 +15,7 @@ let package = Package(
     )
   ],
   dependencies: [
-    .package(url: "https://github.com/swiftlang/swift-java", branch: "main"),
+    .package(url: "https://github.com/swiftlang/swift-java", from: "0.1.2"),
     .package(url: "https://github.com/apple/swift-openapi-generator", from: "1.6.0"),
     .package(url: "https://github.com/apple/swift-openapi-runtime", from: "1.7.0"),
     .package(url: "https://github.com/apple/swift-openapi-urlsession", from: "1.0.0"),
