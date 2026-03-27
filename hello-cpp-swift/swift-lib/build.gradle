@@ -109,17 +109,7 @@ def buildSwiftAll = tasks.register("buildSwiftAll") {
     inputs.file(new File(projectDir, "Package.swift"))
     inputs.dir(new File(layout.projectDirectory.asFile, "Sources/HelloCppSwift".toString()))
 
-    outputs.dir(layout.buildDirectory.dir("../.build/plugins/outputs/${layout.projectDirectory.asFile.getName().toLowerCase()}"))
-
-    File baseSwiftPluginOutputsDir = layout.buildDirectory.dir("../.build/plugins/outputs/").get().asFile
-    if (!baseSwiftPluginOutputsDir.exists()) {
-        baseSwiftPluginOutputsDir.mkdirs()
-    }
-    Files.walk(layout.buildDirectory.dir("../.build/plugins/outputs/").get().asFile.toPath()).each {
-        if (it.endsWith("JExtractSwiftPlugin/src/generated/java")) {
-            outputs.dir(it)
-        }
-    }
+    outputs.dir(layout.buildDirectory.dir("../.build/plugins/outputs/${layout.projectDirectory.asFile.getName().toLowerCase()}/HelloCppSwift/destination/JExtractSwiftPlugin/src/generated/java"))
 }
 
 abis.each { abi, info ->
