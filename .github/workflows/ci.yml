@@ -9,8 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build (swift:${{ matrix.swift_version }})
+  build-examples:
     strategy:
       fail-fast: false
       matrix:
@@ -27,7 +26,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '25'
@@ -35,58 +34,46 @@ jobs:
       - name: Install swiftly
         run: |
           set -euxo pipefail
-          sudo apt-get -q update
-          sudo apt-get -yq install curl jq gpg unzip
-          ARCH="$(uname -m)"
-          curl -L -O --retry 3 "https://download.swift.org/swiftly/linux/swiftly-${ARCH}.tar.gz"
-          tar -xzf "swiftly-${ARCH}.tar.gz"
-          ./swiftly init \
-              --assume-yes \
-              --skip-install \
-              --no-modify-profile \
-              --quiet-shell-followup
-          rm -f "swiftly-${ARCH}.tar.gz" swiftly
-          # The example projects' Gradle scripts look for swiftly under
-          # $HOME/.local/share/swiftly/bin, which is also where the official
-          # installer puts it. Add it to PATH for subsequent steps.
-          echo "$HOME/.local/share/swiftly/bin" >> "$GITHUB_PATH"
-          "$HOME/.local/share/swiftly/bin/swiftly" --version
+          if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            sudo apt-get -yq update install curl jq gpg unzip
+            ARCH="$(uname -m)"
+            curl -L -O --retry 3 "https://download.swift.org/swiftly/linux/swiftly-${ARCH}.tar.gz"
+            tar -xzf "swiftly-${ARCH}.tar.gz"
+            ./swiftly init \
+                --assume-yes \
+                --skip-install \
+                --no-modify-profile \
+                --quiet-shell-followup
+            rm -f "swiftly-${ARCH}.tar.gz" swiftly
+            # The example projects' Gradle scripts look for swiftly under
+            # $HOME/.local/share/swiftly/bin, which is also where the official
+            # installer puts it. Add it to PATH for subsequent steps.
+            echo "$HOME/.local/share/swiftly/bin" >> "$GITHUB_PATH"
+            "$HOME/.local/share/swiftly/bin/swiftly" --version
+          elif [[ "${RUNNER_OS}" == "macOS" ]]; then
+            curl -O https://download.swift.org/swiftly/darwin/swiftly.pkg && \
+            installer -pkg swiftly.pkg -target CurrentUserHomeDirectory && \
+            ~/.swiftly/bin/swiftly init --quiet-shell-followup && \
+            . "${SWIFTLY_HOME_DIR:-$HOME/.swiftly}/env.sh" && \
+            hash -r
 
-      - name: Install Swift via swiftly
-        run: |
-          set -euxo pipefail
-          # Translate the matrix's swift_version into the form swiftly expects:
-          #   nightly-main  -> main-snapshot
-          #   nightly-6.3   -> 6.3-snapshot
-          #   6.3 / 6.3.0   -> passed through as-is
-          case "$SWIFT_VERSION" in
-            nightly-main) SWIFTLY_VER="main-snapshot" ;;
-            nightly-*)    SWIFTLY_VER="${SWIFT_VERSION#nightly-}-snapshot" ;;
-            *)            SWIFTLY_VER="$SWIFT_VERSION" ;;
-          esac
-          POST_INSTALL_FILE="$(mktemp)"
-          swiftly install "$SWIFTLY_VER" \
-              --use \
-              --assume-yes \
-              --post-install-file="$POST_INSTALL_FILE"
-          # Some toolchains print follow-up commands (e.g. apt-get install
-          # of missing system libs) to the post-install file. Run them if
-          # any were emitted.
-          if [ -s "$POST_INSTALL_FILE" ]; then
-            sudo bash "$POST_INSTALL_FILE"
+            echo "$HOME/.swiftly/bin" >> "$GITHUB_PATH"
+            "$HOME/.swiftly/bin/swiftly" --version
+          else
+            echo "Unknown OS: ${RUNNER_OS}"
+            exit 1
           fi
-          rm -f "$POST_INSTALL_FILE"
-          swift --version
 
       - name: Install Android NDK
         run: |
           set -euxo pipefail
-          curl -L -o ndk.zip --retry 3 "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux.zip"
+          OS="$(uname -s | tr '[A-Z]' '[a-z]')"
+          curl -L -o ndk.zip --retry 3 "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-${OS}.zip"
           unzip -q ndk.zip -d "$HOME"
           rm ndk.zip
           echo "ANDROID_NDK_HOME=$HOME/android-ndk-${NDK_VERSION}" >> "$GITHUB_ENV"
 
-      - name: Install Android Swift SDK
+      - name: Install Android Swift SDK and matching host toolchain
         # Looks up the Android Swift SDK URL and checksum from the swift.org
         # install API and installs it via `swift sdk install`. For releases
         # we use https://www.swift.org/api/v1/install/releases.json (which
@@ -128,9 +115,11 @@ jobs:
               sdk_url="https://download.swift.org/swift-${latest_version}-release/android-sdk/${snapshot_tag}/${snapshot_tag}_android.artifactbundle.tar.gz"
               ;;
           esac
-          echo "Installing Android Swift SDK"
+          echo "Installing Android Swift SDK and host toolchain"
+          echo "  tag:      $snapshot_tag"
           echo "  url:      $sdk_url"
           echo "  checksum: $sdk_checksum"
+          swiftly install ${snapshot_tag}
           swift sdk install "$sdk_url" --checksum "$sdk_checksum"
           swift sdk list
 
@@ -158,35 +147,27 @@ jobs:
           ./.build/checkouts/swift-java/gradlew \
               --project-dir .build/checkouts/swift-java \
               :SwiftKitCore:publishToMavenLocal
-        continue-on-error: true
 
       - name: Build hello-swift-raw-jni APK
         run: ./gradlew :hello-swift-raw-jni:assembleDebug --stacktrace
-        continue-on-error: true
 
       - name: Build hello-swift-raw-jni-callback APK
         run: ./gradlew :hello-swift-raw-jni-callback:assembleDebug --stacktrace
-        continue-on-error: true
 
       - name: Build hello-swift-raw-jni-library
         run: ./gradlew :hello-swift-raw-jni-library:assembleDebug --stacktrace
-        continue-on-error: true
 
       - name: Build native-activity APK
         run: ./gradlew :native-activity:assembleDebug --stacktrace
-        continue-on-error: true
 
       - name: Build hello-swift-java APK
         run: ./gradlew :hello-swift-java-hashing-app:assembleDebug --stacktrace
-        continue-on-error: true
 
       - name: Build swift-java-weather-app APK
         run: ./gradlew :swift-java-weather-app-weather-app:assembleDebug --stacktrace
-        continue-on-error: true
 
       - name: Build hello-cpp-swift APK
         run: ./gradlew :hello-cpp-swift:app:assembleDebug --stacktrace
-        continue-on-error: true
 
       - name: Upload APK artifacts
         if: always()
