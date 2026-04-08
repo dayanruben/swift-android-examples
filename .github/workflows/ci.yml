@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        swift_version: ['nightly-main', 'nightly-6.3', '6.3']
+        swift_version: ['nightly-main', 'nightly-6.3', '6.3.0']
         sdk_triple: ['aarch64-unknown-linux-android28']
         ndk_version: ['r27d']
     env:
