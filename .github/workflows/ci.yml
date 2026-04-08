@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        swift_version: ['nightly-main', 'nightly-6.3', '6.3.0']
+        swift_version: ['nightly-main', 'nightly-6.3', '6.3']
         sdk_triple: ['aarch64-unknown-linux-android28']
         ndk_version: ['r27d']
     env:
@@ -31,15 +31,62 @@ jobs:
           distribution: temurin
           java-version: '25'
 
-      - name: Install Swift toolchain and Android Swift SDK
-        # Mirrors the build-swift-android job from
-        # https://github.com/swiftlang/swift-java/blob/main/.github/workflows/pull_request.yml
-        # but uses ":" as a no-op build command because we want only the
-        # toolchain + Android Swift SDK installed, not a Swift package built.
+      - name: Install swiftly
         run: |
           set -euxo pipefail
           sudo apt-get -q update
           sudo apt-get -yq install curl jq gpg unzip
+          ARCH="$(uname -m)"
+          curl -L -O --retry 3 "https://download.swift.org/swiftly/linux/swiftly-${ARCH}.tar.gz"
+          tar -xzf "swiftly-${ARCH}.tar.gz"
+          ./swiftly init \
+              --assume-yes \
+              --skip-install \
+              --no-modify-profile \
+              --quiet-shell-followup
+          rm -f "swiftly-${ARCH}.tar.gz" swiftly
+          # The example projects' Gradle scripts look for swiftly under
+          # $HOME/.local/share/swiftly/bin, which is also where the official
+          # installer puts it. Add it to PATH for subsequent steps.
+          echo "$HOME/.local/share/swiftly/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/share/swiftly/bin/swiftly" --version
+
+      - name: Install Swift via swiftly
+        run: |
+          set -euxo pipefail
+          # Translate the matrix's swift_version into the form swiftly expects:
+          #   nightly-main  -> main-snapshot
+          #   nightly-6.3   -> 6.3-snapshot
+          #   6.3 / 6.3.0   -> passed through as-is
+          case "$SWIFT_VERSION" in
+            nightly-main) SWIFTLY_VER="main-snapshot" ;;
+            nightly-*)    SWIFTLY_VER="${SWIFT_VERSION#nightly-}-snapshot" ;;
+            *)            SWIFTLY_VER="$SWIFT_VERSION" ;;
+          esac
+          POST_INSTALL_FILE="$(mktemp)"
+          swiftly install "$SWIFTLY_VER" \
+              --use \
+              --assume-yes \
+              --post-install-file="$POST_INSTALL_FILE"
+          # Some toolchains print follow-up commands (e.g. apt-get install
+          # of missing system libs) to the post-install file. Run them if
+          # any were emitted.
+          if [ -s "$POST_INSTALL_FILE" ]; then
+            sudo bash "$POST_INSTALL_FILE"
+          fi
+          rm -f "$POST_INSTALL_FILE"
+          swift --version
+
+      - name: Install Android Swift SDK and NDK
+        # Uses the build-swift-android mechanism from
+        # https://github.com/swiftlang/swift-java/blob/main/.github/workflows/pull_request.yml
+        # to install the Android Swift SDK and NDK and link them via the
+        # bundle's setup-android-sdk.sh script. The Swift toolchain itself
+        # was already installed in the previous step via swiftly. ":" is
+        # passed as a no-op build command because we don't want this script
+        # to also try to `swift build` anything.
+        run: |
+          set -euxo pipefail
           curl -L -O --retry 3 https://raw.githubusercontent.com/swiftlang/github-workflows/refs/heads/main/.github/workflows/scripts/install-and-build-with-sdk.sh
           perl -pi -e "s#(download_and_extract_toolchain \".ANDROID_SDK_TAG\"\))#\1\n        PATH=\\\$(dirname \\\$SWIFT_EXECUTABLE_FOR_ANDROID_SDK):\\\$PATH\n        echo \"path is now \\\$PATH\"#" install-and-build-with-sdk.sh
           chmod 500 install-and-build-with-sdk.sh
@@ -49,53 +96,6 @@ jobs:
               --android-sdk-triple="${SDK_TRIPLE}" \
               --android-ndk-version="${NDK_VERSION}" \
               "${SWIFT_VERSION}"
-
-      - name: Locate installed Swift toolchain
-        run: |
-          set -euo pipefail
-          SWIFT_BIN=$(find "$HOME/.swift-toolchains" -type f -name swift -path '*/usr/bin/swift' | head -n1)
-          if [ -z "$SWIFT_BIN" ]; then
-            echo "Error: could not find swift binary under $HOME/.swift-toolchains" >&2
-            exit 1
-          fi
-          echo "Found Swift binary: $SWIFT_BIN"
-          "$SWIFT_BIN" --version
-          echo "SWIFT_BIN=$SWIFT_BIN" >> "$GITHUB_ENV"
-          dirname "$SWIFT_BIN" >> "$GITHUB_PATH"
-
-      - name: Create swiftly shim
-        # The example projects' Gradle scripts invoke Swift via swiftly
-        # (e.g. `swiftly run +6.3 swift build ...`). Install a tiny shim that
-        # strips the swiftly-specific arguments and forwards to the swift
-        # binary that the install script downloaded.
-        run: |
-          set -euo pipefail
-          mkdir -p "$HOME/.swiftly/bin"
-          cat > "$HOME/.swiftly/bin/swiftly" <<'SHIM'
-          #!/usr/bin/env bash
-          set -e
-          if [ -z "${SWIFT_BIN:-}" ]; then
-            echo "swiftly shim: SWIFT_BIN is not set" >&2
-            exit 1
-          fi
-          # Drop a leading "run" subcommand
-          if [ "${1:-}" = "run" ]; then shift; fi
-          # Drop any "+<version>" tokens
-          new_args=()
-          for arg in "$@"; do
-            case "$arg" in
-              +*) ;;
-              *) new_args+=("$arg") ;;
-            esac
-          done
-          # Drop a leading "swift" since we're calling the swift binary directly
-          if [ "${#new_args[@]}" -gt 0 ] && [ "${new_args[0]}" = "swift" ]; then
-            new_args=("${new_args[@]:1}")
-          fi
-          exec "$SWIFT_BIN" "${new_args[@]}"
-          SHIM
-          chmod +x "$HOME/.swiftly/bin/swiftly"
-          echo "SWIFTLY_PATH=$HOME/.swiftly/bin/swiftly" >> "$GITHUB_ENV"
 
       - name: Locate Swift Android SDK
         # The per-library build.gradle scripts (hashing-lib, weather-lib,
@@ -138,7 +138,7 @@ jobs:
         working-directory: hello-swift-java/hashing-lib
         run: |
           set -euxo pipefail
-          "$SWIFT_BIN" package resolve
+          swift package resolve
           ./.build/checkouts/swift-java/gradlew \
               --project-dir .build/checkouts/swift-java \
               :SwiftKitCore:publishToMavenLocal
