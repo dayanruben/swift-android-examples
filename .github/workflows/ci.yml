@@ -35,7 +35,7 @@ jobs:
         run: |
           set -euxo pipefail
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
-            sudo apt-get -yq update install curl jq gpg unzip
+            sudo apt-get -yq install curl jq gpg unzip
             ARCH="$(uname -m)"
             curl -L -O --retry 3 "https://download.swift.org/swiftly/linux/swiftly-${ARCH}.tar.gz"
             tar -xzf "swiftly-${ARCH}.tar.gz"
@@ -119,7 +119,7 @@ jobs:
           echo "  tag:      $snapshot_tag"
           echo "  url:      $sdk_url"
           echo "  checksum: $sdk_checksum"
-          swiftly install ${snapshot_tag}
+          swiftly install ${${snapshot_tag/swift-/}/-RELEASE/}
           swift sdk install "$sdk_url" --checksum "$sdk_checksum"
           swift sdk list
 
@@ -149,7 +149,7 @@ jobs:
               :SwiftKitCore:publishToMavenLocal
 
       - name: Build hello-swift-raw-jni APK
-        run: ./gradlew :hello-swift-raw-jni:assembleDebug --stacktrace
+        run: ./gradlew :hello-swift-raw-jni:assembleDebug --stacktrace --verbose
 
       - name: Build hello-swift-raw-jni-callback APK
         run: ./gradlew :hello-swift-raw-jni-callback:assembleDebug --stacktrace
@@ -176,3 +176,4 @@ jobs:
           name: apks-${{ matrix.swift_version }}
           path: '**/build/outputs/apk/**/*.apk'
           if-no-files-found: warn
+
