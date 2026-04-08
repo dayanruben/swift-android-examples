@@ -1,0 +1,181 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (swift:${{ matrix.swift_version }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        swift_version: ['nightly-main', 'nightly-6.3', '6.3']
+        sdk_triple: ['aarch64-unknown-linux-android28']
+        ndk_version: ['r27d']
+    env:
+      SDK_TRIPLE: ${{ matrix.sdk_triple }}
+      NDK_VERSION: ${{ matrix.ndk_version }}
+      SWIFT_VERSION: ${{ matrix.swift_version }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Install Swift toolchain and Android Swift SDK
+        # Mirrors the build-swift-android job from
+        # https://github.com/swiftlang/swift-java/blob/main/.github/workflows/pull_request.yml
+        # but uses ":" as a no-op build command because we want only the
+        # toolchain + Android Swift SDK installed, not a Swift package built.
+        run: |
+          set -euxo pipefail
+          sudo apt-get -q update
+          sudo apt-get -yq install curl jq gpg unzip
+          curl -L -O --retry 3 https://raw.githubusercontent.com/swiftlang/github-workflows/refs/heads/main/.github/workflows/scripts/install-and-build-with-sdk.sh
+          perl -pi -e "s#(download_and_extract_toolchain \".ANDROID_SDK_TAG\"\))#\1\n        PATH=\\\$(dirname \\\$SWIFT_EXECUTABLE_FOR_ANDROID_SDK):\\\$PATH\n        echo \"path is now \\\$PATH\"#" install-and-build-with-sdk.sh
+          chmod 500 install-and-build-with-sdk.sh
+          ./install-and-build-with-sdk.sh \
+              --android \
+              --build-command=":" \
+              --android-sdk-triple="${SDK_TRIPLE}" \
+              --android-ndk-version="${NDK_VERSION}" \
+              "${SWIFT_VERSION}"
+
+      - name: Locate installed Swift toolchain
+        run: |
+          set -euo pipefail
+          SWIFT_BIN=$(find "$HOME/.swift-toolchains" -type f -name swift -path '*/usr/bin/swift' | head -n1)
+          if [ -z "$SWIFT_BIN" ]; then
+            echo "Error: could not find swift binary under $HOME/.swift-toolchains" >&2
+            exit 1
+          fi
+          echo "Found Swift binary: $SWIFT_BIN"
+          "$SWIFT_BIN" --version
+          echo "SWIFT_BIN=$SWIFT_BIN" >> "$GITHUB_ENV"
+          dirname "$SWIFT_BIN" >> "$GITHUB_PATH"
+
+      - name: Create swiftly shim
+        # The example projects' Gradle scripts invoke Swift via swiftly
+        # (e.g. `swiftly run +6.3 swift build ...`). Install a tiny shim that
+        # strips the swiftly-specific arguments and forwards to the swift
+        # binary that the install script downloaded.
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.swiftly/bin"
+          cat > "$HOME/.swiftly/bin/swiftly" <<'SHIM'
+          #!/usr/bin/env bash
+          set -e
+          if [ -z "${SWIFT_BIN:-}" ]; then
+            echo "swiftly shim: SWIFT_BIN is not set" >&2
+            exit 1
+          fi
+          # Drop a leading "run" subcommand
+          if [ "${1:-}" = "run" ]; then shift; fi
+          # Drop any "+<version>" tokens
+          new_args=()
+          for arg in "$@"; do
+            case "$arg" in
+              +*) ;;
+              *) new_args+=("$arg") ;;
+            esac
+          done
+          # Drop a leading "swift" since we're calling the swift binary directly
+          if [ "${#new_args[@]}" -gt 0 ] && [ "${new_args[0]}" = "swift" ]; then
+            new_args=("${new_args[@]:1}")
+          fi
+          exec "$SWIFT_BIN" "${new_args[@]}"
+          SHIM
+          chmod +x "$HOME/.swiftly/bin/swiftly"
+          echo "SWIFTLY_PATH=$HOME/.swiftly/bin/swiftly" >> "$GITHUB_ENV"
+
+      - name: Locate Swift Android SDK
+        # The per-library build.gradle scripts (hashing-lib, weather-lib,
+        # hello-cpp-swift/swift-lib) and swift-android.gradle.kts hardcode the
+        # artifactbundle directory name to "swift-6.3-RELEASE_android.artifactbundle".
+        # When we install a different snapshot, expose the actual bundle under
+        # that name via a symlink so the Gradle scripts can locate the runtime libs.
+        run: |
+          set -euo pipefail
+          SDK_BUNDLE=""
+          for d in "$HOME/.swiftpm/swift-sdks" "$HOME/.config/swiftpm/swift-sdks" "$HOME/Library/org.swift.swiftpm/swift-sdks"; do
+            if [ -d "$d" ]; then
+              found=$(find "$d" -maxdepth 1 -type d -name '*_android*.artifactbundle' | head -n1)
+              if [ -n "$found" ]; then
+                SDK_BUNDLE="$found"
+                break
+              fi
+            fi
+          done
+          if [ -z "$SDK_BUNDLE" ]; then
+            echo "Error: Android Swift SDK artifactbundle was not found" >&2
+            find "$HOME/.swiftpm" "$HOME/.config/swiftpm" 2>/dev/null || true
+            exit 1
+          fi
+          echo "Found Android SDK bundle: $SDK_BUNDLE"
+          SDK_DIR=$(dirname "$SDK_BUNDLE")
+          EXPECTED="$SDK_DIR/swift-6.3-RELEASE_android.artifactbundle"
+          if [ ! -e "$EXPECTED" ]; then
+            ln -s "$SDK_BUNDLE" "$EXPECTED"
+            echo "Symlinked $EXPECTED -> $SDK_BUNDLE"
+          fi
+          echo "SWIFT_SDK_PATH=$SDK_DIR" >> "$GITHUB_ENV"
+
+      - name: Publish swift-java packages to local Maven
+        # The hashing-lib, weather-lib, and hello-cpp-swift/swift-lib modules
+        # depend on org.swift.swiftkit:swiftkit-core:1.0-SNAPSHOT, which is not
+        # published to a public Maven repo. The hashing-lib README documents
+        # publishing it to mavenLocal from the swift-java checkout that
+        # SwiftPM resolves into .build/checkouts/swift-java.
+        working-directory: hello-swift-java/hashing-lib
+        run: |
+          set -euxo pipefail
+          "$SWIFT_BIN" package resolve
+          ./.build/checkouts/swift-java/gradlew \
+              --project-dir .build/checkouts/swift-java \
+              :SwiftKitCore:publishToMavenLocal
+        continue-on-error: true
+
+      - name: Build hello-swift-raw-jni APK
+        run: ./gradlew :hello-swift-raw-jni:assembleDebug --stacktrace
+        continue-on-error: true
+
+      - name: Build hello-swift-raw-jni-callback APK
+        run: ./gradlew :hello-swift-raw-jni-callback:assembleDebug --stacktrace
+        continue-on-error: true
+
+      - name: Build hello-swift-raw-jni-library
+        run: ./gradlew :hello-swift-raw-jni-library:assembleDebug --stacktrace
+        continue-on-error: true
+
+      - name: Build native-activity APK
+        run: ./gradlew :native-activity:assembleDebug --stacktrace
+        continue-on-error: true
+
+      - name: Build hello-swift-java APK
+        run: ./gradlew :hello-swift-java-hashing-app:assembleDebug --stacktrace
+        continue-on-error: true
+
+      - name: Build swift-java-weather-app APK
+        run: ./gradlew :swift-java-weather-app-weather-app:assembleDebug --stacktrace
+        continue-on-error: true
+
+      - name: Build hello-cpp-swift APK
+        run: ./gradlew :hello-cpp-swift:app:assembleDebug --stacktrace
+        continue-on-error: true
+
+      - name: Upload APK artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apks-${{ matrix.swift_version }}
+          path: '**/build/outputs/apk/**/*.apk'
+          if-no-files-found: warn
