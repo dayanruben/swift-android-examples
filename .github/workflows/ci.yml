@@ -115,11 +115,17 @@ jobs:
               sdk_url="https://download.swift.org/swift-${latest_version}-release/android-sdk/${snapshot_tag}/${snapshot_tag}_android.artifactbundle.tar.gz"
               ;;
           esac
+
+          swift_install=${snapshot_tag}
+          # trim leading "swift-" and trailing "-RELEASE"
+          swift_install=${swift_install/swift-/}
+          swift_install=${swift_install/-RELEASE/}
+
           echo "Installing Android Swift SDK and host toolchain"
-          echo "  tag:      $snapshot_tag"
+          echo "  tag:      $swift_install"
           echo "  url:      $sdk_url"
           echo "  checksum: $sdk_checksum"
-          swiftly install ${${snapshot_tag/swift-/}/-RELEASE/}
+          swiftly install "${swift_install}"
           swift sdk install "$sdk_url" --checksum "$sdk_checksum"
           swift sdk list
 
