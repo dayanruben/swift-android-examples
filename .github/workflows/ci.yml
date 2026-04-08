@@ -11,13 +11,14 @@ permissions:
 jobs:
   build:
     name: Build (swift:${{ matrix.swift_version }})
-    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         swift_version: ['nightly-main', 'nightly-6.3', '6.3']
         sdk_triple: ['aarch64-unknown-linux-android28']
         ndk_version: ['r27d']
+        os: ['ubuntu-latest', 'macos-latest']
+    runs-on: ${{ matrix.os }}
     env:
       SDK_TRIPLE: ${{ matrix.sdk_triple }}
       NDK_VERSION: ${{ matrix.ndk_version }}
@@ -77,57 +78,72 @@ jobs:
           rm -f "$POST_INSTALL_FILE"
           swift --version
 
-      - name: Install Android Swift SDK and NDK
-        # Uses the build-swift-android mechanism from
-        # https://github.com/swiftlang/swift-java/blob/main/.github/workflows/pull_request.yml
-        # to install the Android Swift SDK and NDK and link them via the
-        # bundle's setup-android-sdk.sh script. The Swift toolchain itself
-        # was already installed in the previous step via swiftly. ":" is
-        # passed as a no-op build command because we don't want this script
-        # to also try to `swift build` anything.
+      - name: Install Android NDK
         run: |
           set -euxo pipefail
-          curl -L -O --retry 3 https://raw.githubusercontent.com/swiftlang/github-workflows/refs/heads/main/.github/workflows/scripts/install-and-build-with-sdk.sh
-          perl -pi -e "s#(download_and_extract_toolchain \".ANDROID_SDK_TAG\"\))#\1\n        PATH=\\\$(dirname \\\$SWIFT_EXECUTABLE_FOR_ANDROID_SDK):\\\$PATH\n        echo \"path is now \\\$PATH\"#" install-and-build-with-sdk.sh
-          chmod 500 install-and-build-with-sdk.sh
-          ./install-and-build-with-sdk.sh \
-              --android \
-              --build-command=":" \
-              --android-sdk-triple="${SDK_TRIPLE}" \
-              --android-ndk-version="${NDK_VERSION}" \
-              "${SWIFT_VERSION}"
+          curl -L -o ndk.zip --retry 3 "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux.zip"
+          unzip -q ndk.zip -d "$HOME"
+          rm ndk.zip
+          echo "ANDROID_NDK_HOME=$HOME/android-ndk-${NDK_VERSION}" >> "$GITHUB_ENV"
 
-      - name: Locate Swift Android SDK
-        # The per-library build.gradle scripts (hashing-lib, weather-lib,
-        # hello-cpp-swift/swift-lib) and swift-android.gradle.kts hardcode the
-        # artifactbundle directory name to "swift-6.3-RELEASE_android.artifactbundle".
-        # When we install a different snapshot, expose the actual bundle under
-        # that name via a symlink so the Gradle scripts can locate the runtime libs.
+      - name: Install Android Swift SDK
+        # Looks up the Android Swift SDK URL and checksum from the swift.org
+        # install API and installs it via `swift sdk install`. For releases
+        # we use https://www.swift.org/api/v1/install/releases.json (which
+        # gives us each platform's checksum, but not a download URL — we
+        # construct that from the version). For nightlies we query
+        # https://www.swift.org/api/v1/install/dev/<version>/android-sdk.json
+        # for the latest snapshot tag and checksum.
+        run: |
+          set -euxo pipefail
+          case "$SWIFT_VERSION" in
+            nightly-*)
+              nightly_version="${SWIFT_VERSION#nightly-}"
+              sdk_json=$(curl -fsSL "https://www.swift.org/api/v1/install/dev/${nightly_version}/android-sdk.json")
+              snapshot_tag=$(echo "$sdk_json" | jq -r '.[0].dir')
+              sdk_checksum=$(echo "$sdk_json" | jq -r '.[0].checksum')
+              if [ "$nightly_version" = "main" ]; then
+                branch="development"
+              else
+                branch="swift-${nightly_version}-branch"
+              fi
+              sdk_url="https://download.swift.org/${branch}/android-sdk/${snapshot_tag}/${snapshot_tag}_android.artifactbundle.tar.gz"
+              ;;
+            *)
+              releases_json=$(curl -fsSL "https://www.swift.org/api/v1/install/releases.json")
+              # Pick the highest patch release whose name starts with the
+              # requested version (e.g. "6.3" -> "6.3.1" if it exists).
+              latest_version=$(echo "$releases_json" | jq -r --arg v "$SWIFT_VERSION" \
+                '[.[] | select(.name | startswith($v))]
+                 | sort_by(.name | split(".") | map(tonumber? // 0))
+                 | last
+                 | .name')
+              if [ -z "$latest_version" ] || [ "$latest_version" = "null" ]; then
+                echo "Error: no Swift release matching '$SWIFT_VERSION' found in releases.json" >&2
+                exit 1
+              fi
+              sdk_checksum=$(echo "$releases_json" | jq -r --arg v "$latest_version" \
+                '.[] | select(.name == $v) | .platforms[] | select(.platform == "android") | .checksum')
+              snapshot_tag="swift-${latest_version}-RELEASE"
+              sdk_url="https://download.swift.org/swift-${latest_version}-release/android-sdk/${snapshot_tag}/${snapshot_tag}_android.artifactbundle.tar.gz"
+              ;;
+          esac
+          echo "Installing Android Swift SDK"
+          echo "  url:      $sdk_url"
+          echo "  checksum: $sdk_checksum"
+          swift sdk install "$sdk_url" --checksum "$sdk_checksum"
+          swift sdk list
+
+      - name: Configure Swift Android SDK
         run: |
           set -euo pipefail
-          SDK_BUNDLE=""
-          for d in "$HOME/.swiftpm/swift-sdks" "$HOME/.config/swiftpm/swift-sdks" "$HOME/Library/org.swift.swiftpm/swift-sdks"; do
-            if [ -d "$d" ]; then
-              found=$(find "$d" -maxdepth 1 -type d -name '*_android*.artifactbundle' | head -n1)
-              if [ -n "$found" ]; then
-                SDK_BUNDLE="$found"
-                break
-              fi
-            fi
-          done
-          if [ -z "$SDK_BUNDLE" ]; then
-            echo "Error: Android Swift SDK artifactbundle was not found" >&2
-            find "$HOME/.swiftpm" "$HOME/.config/swiftpm" 2>/dev/null || true
-            exit 1
+          cd $HOME/.swiftpm/swift-sdks/*android*.artifactbundle || cd $HOME/.config/swiftpm/swift-sdks/*android*.artifactbundle || cd $HOME/Library/org.swift.swiftpm/swift-sdks/*android*.artifactbundle
+          # Link the SDK against the NDK we installed in the previous step.
+          # Someday we might not need this script, so gracefully skip it
+          # if it does not exist.
+          if [[ -x "./swift-android/scripts/setup-android-sdk.sh" ]]; then
+            "./swift-android/scripts/setup-android-sdk.sh"
           fi
-          echo "Found Android SDK bundle: $SDK_BUNDLE"
-          SDK_DIR=$(dirname "$SDK_BUNDLE")
-          EXPECTED="$SDK_DIR/swift-6.3-RELEASE_android.artifactbundle"
-          if [ ! -e "$EXPECTED" ]; then
-            ln -s "$SDK_BUNDLE" "$EXPECTED"
-            echo "Symlinked $EXPECTED -> $SDK_BUNDLE"
-          fi
-          echo "SWIFT_SDK_PATH=$SDK_DIR" >> "$GITHUB_ENV"
 
       - name: Publish swift-java packages to local Maven
         # The hashing-lib, weather-lib, and hello-cpp-swift/swift-lib modules
