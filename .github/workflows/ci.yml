@@ -193,21 +193,8 @@ jobs:
             # Derive a human-readable project name from the path
             project=$(echo "$apk" | sed -E 's#^\./##; s#/build/outputs/.*##')
             name=$(basename "$apk")
-            # Human-readable size
-            if command -v numfmt >/dev/null 2>&1; then
-              size=$(stat --format='%s' "$apk" 2>/dev/null | numfmt --to=iec-i --suffix=B)
-            else
-              bytes=$(stat -f '%z' "$apk" 2>/dev/null || echo 0)
-              if [ "$bytes" -ge 1073741824 ]; then
-                size="$(awk "BEGIN {printf \"%.1f\", $bytes/1073741824}")GiB"
-              elif [ "$bytes" -ge 1048576 ]; then
-                size="$(awk "BEGIN {printf \"%.1f\", $bytes/1048576}")MiB"
-              elif [ "$bytes" -ge 1024 ]; then
-                size="$(awk "BEGIN {printf \"%.1f\", $bytes/1024}")KiB"
-              else
-                size="${bytes}B"
-              fi
-            fi
+            # Human-readable size (du -h works on both Linux and macOS)
+            size=$(du -h "$apk" | cut -f1 | tr -d '[:space:]')
             echo "| \`$project\` | \`$name\` | $size |" >> "$GITHUB_STEP_SUMMARY"
           done < <(find . -path '*/build/outputs/apk/*.apk' -type f | sort)
           if [ "$found" -eq 0 ]; then
