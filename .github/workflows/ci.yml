@@ -105,7 +105,7 @@ jobs:
                 exit 1
               fi
               sdk_checksum=$(echo "$releases_json" | jq -r --arg v "$latest_version" \
-                '.[] | select(.name == $v) | .platforms[] | select(.platform == "android") | .checksum')
+                '.[] | select(.name == $v) | .platforms[] | select(.platform == "android-sdk") | .checksum')
               snapshot_tag="swift-${latest_version}-RELEASE"
               sdk_url="https://download.swift.org/swift-${latest_version}-release/android-sdk/${snapshot_tag}/${snapshot_tag}_android.artifactbundle.tar.gz"
               ;;
