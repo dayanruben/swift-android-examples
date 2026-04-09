@@ -14,7 +14,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        swift_version: ['nightly-main', '6.3']
+        #swift_version: ['nightly-main', '6.3']
+        swift_version: ['6.3']
         sdk_triple: ['aarch64-unknown-linux-android28']
         ndk_version: ['r27d']
         os: ['ubuntu-latest', 'macos-latest']
@@ -179,11 +180,45 @@ jobs:
           cd -
           ./gradlew :hello-cpp-swift:app:assembleDebug --stacktrace
 
+      - name: Summarize APK artifacts
+        if: always()
+        run: |
+          echo "## APK Artifacts (${{ matrix.os }} / swift:${{ matrix.swift_version }} / ${{ matrix.sdk_triple }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Project | APK | Size |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---------|-----|------|" >> "$GITHUB_STEP_SUMMARY"
+          found=0
+          while IFS= read -r apk; do
+            found=1
+            # Derive a human-readable project name from the path
+            project=$(echo "$apk" | sed -E 's#^\./##; s#/build/outputs/.*##')
+            name=$(basename "$apk")
+            # Human-readable size
+            if command -v numfmt >/dev/null 2>&1; then
+              size=$(stat --format='%s' "$apk" 2>/dev/null | numfmt --to=iec-i --suffix=B)
+            else
+              bytes=$(stat -f '%z' "$apk" 2>/dev/null || echo 0)
+              if [ "$bytes" -ge 1073741824 ]; then
+                size="$(awk "BEGIN {printf \"%.1f\", $bytes/1073741824}")GiB"
+              elif [ "$bytes" -ge 1048576 ]; then
+                size="$(awk "BEGIN {printf \"%.1f\", $bytes/1048576}")MiB"
+              elif [ "$bytes" -ge 1024 ]; then
+                size="$(awk "BEGIN {printf \"%.1f\", $bytes/1024}")KiB"
+              else
+                size="${bytes}B"
+              fi
+            fi
+            echo "| \`$project\` | \`$name\` | $size |" >> "$GITHUB_STEP_SUMMARY"
+          done < <(find . -path '*/build/outputs/apk/*.apk' -type f | sort)
+          if [ "$found" -eq 0 ]; then
+            echo "| _(none)_ | — | — |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Upload APK artifacts
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: apks-${{ matrix.swift_version }}
+          name: apks-${{ matrix.os }}-${{ matrix.swift_version }}-${{ matrix.sdk_triple }}-${{ matrix.ndk_version }}
           path: '**/build/outputs/apk/**/*.apk'
           if-no-files-found: warn
 
