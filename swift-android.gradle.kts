@@ -14,8 +14,14 @@ data class SwiftConfig(
     var releaseExtraBuildFlags: List<String> = emptyList(),
     var swiftlyPath: String? = null, // Optional custom swiftly path
     var swiftSDKPath: String? = null, // Optional custom Swift SDK path
-    var swiftVersion: String = "6.3", // Swift version
-    var androidSdkVersion: String = "6.3-RELEASE_android" // SDK version
+    // Swift toolchain version passed to swiftly (e.g. "6.3", "main-snapshot").
+    // Can be overridden via the SWIFT_VERSION environment variable, which is
+    // useful for CI matrices that test multiple toolchains.
+    var swiftVersion: String = System.getenv("SWIFT_VERSION")?.takeIf { it.isNotEmpty() } ?: "6.3",
+    // Android Swift SDK artifactbundle suffix. Substituted into the bundle
+    // directory name as "swift-${androidSdkVersion}.artifactbundle". Can be
+    // overridden via the SWIFT_ANDROID_SDK_VERSION environment variable.
+    var androidSdkVersion: String = System.getenv("SWIFT_ANDROID_SDK_VERSION")?.takeIf { it.isNotEmpty() } ?: "${swiftVersion}-RELEASE_android"
 )
 
 // Architecture definitions

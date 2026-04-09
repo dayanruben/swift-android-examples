@@ -124,6 +124,10 @@ jobs:
           swift sdk install "$sdk_url" --checksum "$sdk_checksum"
           swift sdk list
 
+          # set environment variables used by swift-android.gradle.kts
+          echo "SWIFT_VERSION=${swift_install}" >> $GITHUB_ENV
+          echo "SWIFT_ANDROID_SDK_VERSION=${snapshot_tag}_android" >> $GITHUB_ENV
+
       - name: Configure Swift Android SDK
         run: |
           set -euo pipefail
