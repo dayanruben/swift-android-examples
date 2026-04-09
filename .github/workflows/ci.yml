@@ -154,6 +154,13 @@ jobs:
               --project-dir .build/checkouts/swift-java \
               :SwiftKitCore:publishToMavenLocal
 
+      - name: Build hello-cpp-swift APK
+        run: |
+          cd hello-cpp-swift/cpp-lib
+          ./build-android-static.sh
+          cd -
+          ./gradlew :hello-cpp-swift:app:assembleDebug --stacktrace
+
       - name: Build hello-swift-raw-jni APK
         run: ./gradlew :hello-swift-raw-jni:assembleDebug --stacktrace
 
@@ -171,11 +178,6 @@ jobs:
 
       - name: Build swift-java-weather-app APK
         run: ./gradlew :swift-java-weather-app-weather-app:assembleDebug --stacktrace
-
-      # skipping due to: error: local binary target 'HelloWorldCpp' at '/Users/runner/work/swift-android-examples/swift-android-examples/hello-cpp-swift/cpp-lib/prebuilt/HelloWorldCpp.artifactbundle' does not contain a binary artifact.
-      - name: Build hello-cpp-swift APK
-        if: false
-        run: ./gradlew :hello-cpp-swift:app:assembleDebug --stacktrace
 
       - name: Upload APK artifacts
         if: always()
