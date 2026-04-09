@@ -113,7 +113,7 @@ jobs:
 
           swift_install=${snapshot_tag}
           # trim leading "swift-" and trailing "-RELEASE"
-          swift_install=${swift_install/swift-/}
+          swift_install=${swift_install#swift-}
           swift_install=${swift_install/-RELEASE/}
 
           echo "Installing Android Swift SDK and host toolchain"
@@ -150,7 +150,7 @@ jobs:
               :SwiftKitCore:publishToMavenLocal
 
       - name: Build hello-swift-raw-jni APK
-        run: ./gradlew :hello-swift-raw-jni:assembleDebug --stacktrace --debug
+        run: ./gradlew :hello-swift-raw-jni:assembleDebug --stacktrace
 
       - name: Build hello-swift-raw-jni-callback APK
         run: ./gradlew :hello-swift-raw-jni-callback:assembleDebug --stacktrace
