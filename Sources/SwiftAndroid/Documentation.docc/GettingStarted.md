@@ -10,13 +10,6 @@ Development requires three components:
 2. **Android NDK** -- download from [developer.android.com](https://developer.android.com/ndk/downloads) (r27d+ recommended)
 3. **Swift SDK for Android** -- install with `swift sdk install` (see [swift.org](https://www.swift.org/documentation/articles/swift-sdk-for-android-getting-started.html))
 
-## Install the SDK
-
-```shell
-$ swift sdk install https://download.swift.org/swift-6.1-release/android-sdk/swift-6.1-RELEASE/swift-6.1-RELEASE_android.artifactbundle.tar.gz
-$ swift sdk list
-```
-
 ## Hello World
 
 ```shell
