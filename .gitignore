@@ -10,6 +10,9 @@ build/
 local.properties
 jniLibs
 
+# generated documentation from swift package generate-documentation
+docs/
+
 # Kotlin Gradle plugin data
 # See https://kotlinlang.org/docs/whatsnew20.html#new-directory-for-kotlin-data-in-gradle-projects
 .kotlin/
