@@ -4,9 +4,19 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+    inputs:
+      swift_versions:
+        description: 'JSON array of Swift versions to test (e.g. ["6.3"], ["6.3", "nightly-main"])'
+        required: false
+        default: '["6.3"]'
 
 permissions:
   contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build-examples:
@@ -14,8 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        #swift_version: ['nightly-main', '6.3']
-        swift_version: ['6.3']
+        swift_version: ${{ fromJSON(inputs.swift_versions || '["6.3"]') }}
         sdk_triple: ['aarch64-unknown-linux-android28']
         ndk_version: ['r27d']
         os: ['ubuntu-latest', 'macos-latest']
@@ -53,12 +62,11 @@ jobs:
             echo "$HOME/.local/share/swiftly/bin" >> "$GITHUB_PATH"
             "$HOME/.local/share/swiftly/bin/swiftly" --version
           elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-            curl -O https://download.swift.org/swiftly/darwin/swiftly.pkg && \
-            installer -pkg swiftly.pkg -target CurrentUserHomeDirectory && \
-            ~/.swiftly/bin/swiftly init --quiet-shell-followup && \
-            . "${SWIFTLY_HOME_DIR:-$HOME/.swiftly}/env.sh" && \
+            curl -O https://download.swift.org/swiftly/darwin/swiftly.pkg
+            installer -pkg swiftly.pkg -target CurrentUserHomeDirectory
+            ~/.swiftly/bin/swiftly init --quiet-shell-followup
+            . "${SWIFTLY_HOME_DIR:-$HOME/.swiftly}/env.sh"
             hash -r
-
             echo "$HOME/.swiftly/bin" >> "$GITHUB_PATH"
             "$HOME/.swiftly/bin/swiftly" --version
           else
@@ -126,14 +134,31 @@ jobs:
           swift sdk install "$sdk_url" --checksum "$sdk_checksum"
           swift sdk list
 
-          # set environment variables used by swift-android.gradle.kts
-          echo "SWIFT_VERSION=${swift_install}" >> $GITHUB_ENV
-          echo "SWIFT_ANDROID_SDK_VERSION=${snapshot_tag#swift-}_android" >> $GITHUB_ENV
+          # Override the matrix-supplied SWIFT_VERSION (e.g. "6.3") with the
+          # resolved patch version (e.g. "6.3.1") so the gradle scripts pick up
+          # the actual artifactbundle directory name produced by `swift sdk
+          # install`. SWIFT_ANDROID_SDK_VERSION pins the bundle suffix for the
+          # same reason.
+          echo "SWIFT_VERSION=${swift_install}" >> "$GITHUB_ENV"
+          echo "SWIFT_ANDROID_SDK_VERSION=${snapshot_tag#swift-}_android" >> "$GITHUB_ENV"
 
       - name: Configure Swift Android SDK
         run: |
           set -euo pipefail
-          cd $HOME/.swiftpm/swift-sdks/*android*.artifactbundle || cd $HOME/.config/swiftpm/swift-sdks/*android*.artifactbundle || cd $HOME/Library/org.swift.swiftpm/swift-sdks/*android*.artifactbundle
+          # Locate the installed Android SDK artifactbundle. Its parent
+          # directory varies by OS / swiftpm version, so try the known
+          # candidates and pick the first one that actually matches.
+          shopt -s nullglob
+          candidates=(
+            "$HOME"/.swiftpm/swift-sdks/*android*.artifactbundle
+            "$HOME"/.config/swiftpm/swift-sdks/*android*.artifactbundle
+            "$HOME"/Library/org.swift.swiftpm/swift-sdks/*android*.artifactbundle
+          )
+          if [[ ${#candidates[@]} -eq 0 ]]; then
+            echo "No android SDK artifactbundle found in any known location" >&2
+            exit 1
+          fi
+          cd "${candidates[0]}"
           # Link the SDK against the NDK we installed in the previous step.
           # Someday we might not need this script, so gracefully skip it
           # if it does not exist.
@@ -173,12 +198,12 @@ jobs:
       - name: Build swift-java-weather-app APK
         run: ./gradlew :swift-java-weather-app-weather-app:assembleDebug --stacktrace
 
+      - name: Build hello-cpp-swift cpp-lib
+        working-directory: hello-cpp-swift/cpp-lib
+        run: ./build-android-static.sh
+
       - name: Build hello-cpp-swift APK
-        run: |
-          cd hello-cpp-swift/cpp-lib
-          ./build-android-static.sh
-          cd -
-          ./gradlew :hello-cpp-swift:app:assembleDebug --stacktrace
+        run: ./gradlew :hello-cpp-swift:app:assembleDebug --stacktrace
 
       - name: Summarize APK artifacts
         if: always()
