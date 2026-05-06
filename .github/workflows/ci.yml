@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        swift_version: ${{ fromJSON(inputs.swift_versions || '["6.3"]') }}
+        swift_version: ${{ fromJSON(inputs.swift_versions || '["6.3", "nightly-main"]') }}
         sdk_triple: ['aarch64-unknown-linux-android28']
         ndk_version: ['r27d']
         os: ['ubuntu-latest', 'macos-latest']
@@ -46,6 +46,7 @@ jobs:
         run: |
           set -euxo pipefail
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            sudo apt-get update
             sudo apt-get -yq install curl jq gpg unzip libcurl4-openssl-dev
             ARCH="$(uname -m)"
             curl -L -O --retry 3 "https://download.swift.org/swiftly/linux/swiftly-${ARCH}.tar.gz"
