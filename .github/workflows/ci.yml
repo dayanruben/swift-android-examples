@@ -6,11 +6,6 @@ on:
   schedule:
     - cron: '0 0 * * *'
   workflow_dispatch:
-    inputs:
-      swift_versions:
-        description: 'JSON array of Swift versions to test (e.g. ["6.3"], ["6.3", "nightly-main"])'
-        required: false
-        default: '["6.3", "nightly-main"]'
 
 permissions:
   contents: read
@@ -21,13 +16,13 @@ concurrency:
 
 jobs:
   build-examples:
-    name: Build ${{ matrix.os }} ${{ matrix.swift_version }}
     strategy:
       fail-fast: false
       matrix:
-        swift_version: ${{ fromJSON(inputs.swift_versions || '["6.3", "nightly-main"]') }}
+        swift_version: ["6.3", "nightly-main"]
         ndk_version: ['r27d', 'r30-beta1']
         os: ['ubuntu-latest', 'macos-latest']
+        configuration: ['Debug', 'Release']
     runs-on: ${{ matrix.os }}
     env:
       NDK_VERSION: ${{ matrix.ndk_version }}
@@ -191,34 +186,34 @@ jobs:
               :SwiftKitCore:publishToMavenLocal
 
       - name: Build hello-swift-raw-jni APK
-        run: ./gradlew :hello-swift-raw-jni:assembleRelease --stacktrace
+        run: ./gradlew :hello-swift-raw-jni:assemble${{ matrix.configuration }} --stacktrace
 
       - name: Build hello-swift-raw-jni-callback APK
-        run: ./gradlew :hello-swift-raw-jni-callback:assembleRelease --stacktrace
+        run: ./gradlew :hello-swift-raw-jni-callback:assemble${{ matrix.configuration }} --stacktrace
 
       - name: Build hello-swift-raw-jni-library
-        run: ./gradlew :hello-swift-raw-jni-library:assembleRelease --stacktrace
+        run: ./gradlew :hello-swift-raw-jni-library:assemble${{ matrix.configuration }} --stacktrace
 
       - name: Build native-activity APK
-        run: ./gradlew :native-activity:assembleRelease --stacktrace
+        run: ./gradlew :native-activity:assemble${{ matrix.configuration }} --stacktrace
 
       - name: Build hello-swift-java APK
-        run: ./gradlew :hello-swift-java-hashing-app:assembleRelease --stacktrace
+        run: ./gradlew :hello-swift-java-hashing-app:assemble${{ matrix.configuration }} --stacktrace
 
       - name: Build swift-java-weather-app APK
-        run: ./gradlew :swift-java-weather-app-weather-app:assembleRelease --stacktrace
+        run: ./gradlew :swift-java-weather-app-weather-app:assemble${{ matrix.configuration }} --stacktrace
 
       - name: Build hello-cpp-swift cpp-lib
         working-directory: hello-cpp-swift/cpp-lib
         run: ./build-android-static.sh
 
       - name: Build hello-cpp-swift APK
-        run: ./gradlew :hello-cpp-swift:app:assembleRelease --stacktrace
+        run: ./gradlew :hello-cpp-swift:app:assemble${{ matrix.configuration }} --stacktrace
 
       - name: Summarize APK artifacts
         if: always()
         run: |
-          echo "## APK Artifacts (os:${{ matrix.os }} / swift:${{ matrix.swift_version }} / ndk:${{ matrix.ndk_version }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "## APK Artifacts (os:${{ matrix.os }} / swift:${{ matrix.swift_version }} / ndk:${{ matrix.ndk_version }}) / configuration:${{ matrix.configuration }}" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Project | APK | Size |" >> "$GITHUB_STEP_SUMMARY"
           echo "|---------|-----|------|" >> "$GITHUB_STEP_SUMMARY"
