@@ -9,7 +9,7 @@ on:
       swift_versions:
         description: 'JSON array of Swift versions to test (e.g. ["6.3"], ["6.3", "nightly-main"])'
         required: false
-        default: '["6.3"]'
+        default: '["6.3", "nightly-main"]'
 
 permissions:
   contents: read
