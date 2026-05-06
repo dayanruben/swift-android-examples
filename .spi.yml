@@ -4,4 +4,3 @@ external_links:
 builder:
   configs:
     - documentation_targets: [SwiftAndroid]
-

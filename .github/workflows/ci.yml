@@ -19,7 +19,8 @@ jobs:
     name: Soundness
     uses: swiftlang/github-workflows/.github/workflows/soundness.yml@main
     with:
-      format_check_enabled: false # aspire to true
+      license_header_check_project_name: "Swift.org"
+      format_check_enabled: false  # aspire to true
 
   build-examples:
     strategy:

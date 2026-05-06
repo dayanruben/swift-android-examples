@@ -66,87 +66,87 @@ paths:
                 - soil_moisture_3_9cm
                 - soil_moisture_9_27cm
                 - soil_moisture_27_81cm
-      - name: daily
-        in: query
-        schema:
-          type: array
-          items:
+        - name: daily
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - temperature_2m_max
+                - temperature_2m_min
+                - apparent_temperature_max
+                - apparent_temperature_min
+                - precipitation_sum
+                - precipitation_hours
+                - weather_code
+                - sunrise
+                - sunset
+                - wind_speed_10m_max
+                - wind_gusts_10m_max
+                - wind_direction_10m_dominant
+                - shortwave_radiation_sum
+                - uv_index_max
+                - uv_index_clear_sky_max
+                - et0_fao_evapotranspiration
+        - name: latitude
+          in: query
+          required: true
+          description: "WGS84 coordinate"
+          schema:
+            type: number
+            format: double
+        - name: longitude
+          in: query
+          required: true
+          description: "WGS84 coordinate"
+          schema:
+            type: number
+            format: double
+        - name: current_weather
+          in: query
+          schema:
+            type: boolean
+        - name: temperature_unit
+          in: query
+          schema:
             type: string
+            default: celsius
             enum:
-              - temperature_2m_max
-              - temperature_2m_min
-              - apparent_temperature_max
-              - apparent_temperature_min
-              - precipitation_sum
-              - precipitation_hours
-              - weather_code
-              - sunrise
-              - sunset
-              - wind_speed_10m_max
-              - wind_gusts_10m_max
-              - wind_direction_10m_dominant
-              - shortwave_radiation_sum
-              - uv_index_max
-              - uv_index_clear_sky_max
-              - et0_fao_evapotranspiration
-      - name: latitude
-        in: query
-        required: true
-        description: "WGS84 coordinate"
-        schema:
-          type: number
-          format: double
-      - name: longitude
-        in: query
-        required: true
-        description: "WGS84 coordinate"
-        schema:
-          type: number
-          format: double
-      - name: current_weather
-        in: query
-        schema:
-          type: boolean
-      - name: temperature_unit
-        in: query
-        schema:
-          type: string
-          default: celsius
-          enum:
-            - celsius
-            - fahrenheit
-      - name: wind_speed_unit
-        in: query
-        schema:
-          type: string
-          default: kmh
-          enum:
-            - kmh
-            - ms
-            - mph
-            - kn
-      - name: timeformat
-        in: query
-        description: If format `unixtime` is selected, all time values are returned in UNIX epoch time in seconds. Please not that all time is then in GMT+0! For daily values with unix timestamp, please apply `utc_offset_seconds` again to get the correct date.
-        schema:
-          type: string
-          default: iso8601
-          enum:
-            - iso8601
-            - unixtime
-      - name: timezone
-        in: query
-        description: If `timezone` is set, all timestamps are returned as local-time and data is returned starting at 0:00 local-time. Any time zone name from the [time zone database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) is supported.
-        schema:
-          type: string
-      - name: past_days
-        in: query
-        description: If `past_days` is set, yesterdays or the day before yesterdays data are also returned.
-        schema:
-          type: integer
-          enum:
-            - 1
-            - 2
+              - celsius
+              - fahrenheit
+        - name: wind_speed_unit
+          in: query
+          schema:
+            type: string
+            default: kmh
+            enum:
+              - kmh
+              - ms
+              - mph
+              - kn
+        - name: timeformat
+          in: query
+          description: If format `unixtime` is selected, all time values are returned in UNIX epoch time in seconds. Please not that all time is then in GMT+0! For daily values with unix timestamp, please apply `utc_offset_seconds` again to get the correct date.
+          schema:
+            type: string
+            default: iso8601
+            enum:
+              - iso8601
+              - unixtime
+        - name: timezone
+          in: query
+          description: If `timezone` is set, all timestamps are returned as local-time and data is returned starting at 0:00 local-time. Any time zone name from the [time zone database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) is supported.
+          schema:
+            type: string
+        - name: past_days
+          in: query
+          description: If `past_days` is set, yesterdays or the day before yesterdays data are also returned.
+          schema:
+            type: integer
+            enum:
+              - 1
+              - 2
       responses:
         "200":
           description: OK
