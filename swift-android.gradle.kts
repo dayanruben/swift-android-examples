@@ -140,6 +140,7 @@ fun createSwiftBuildTask(
         val defaultArgs = listOf(
             "run", "+${swiftVersion}", "swift", "build",
             "--swift-sdk", sdkName,
+            "--build-system", "native", // old build system until we can sort out the output paths
             "-Xswiftc", "-static-stdlib",
             "-Xswiftc", "-resource-dir",
             "-Xswiftc", resourcesPath

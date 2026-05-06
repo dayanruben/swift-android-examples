@@ -132,7 +132,7 @@ abis.each { abi, info ->
 
         workingDir = layout.projectDirectory
         executable(getSwiftlyPath())
-        args("run", "swift", "build", "+${swiftVersion}", "--swift-sdk", info.triple)
+        args("run", "swift", "build", "+${swiftVersion}", "--swift-sdk", info.triple, "--build-system", "native")
     }
 
     buildSwiftAll.configure { dependsOn(task) }

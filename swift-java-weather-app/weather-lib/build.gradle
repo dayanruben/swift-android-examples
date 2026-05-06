@@ -147,7 +147,7 @@ abis.each { abi, info ->
 
         // We must disable sandbox, because we use the `enableJavaCallbacks` feature
         // of swift-java.
-        args("run", "swift", "build", "+${swiftVersion}", "--swift-sdk", info.triple, "--disable-sandbox")
+        args("run", "swift", "build", "+${swiftVersion}", "--swift-sdk", info.triple, "--build-system", "native", "--disable-sandbox")
     }
 
     buildSwiftAll.configure { dependsOn(task) }
