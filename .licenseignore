@@ -12,11 +12,11 @@
 .github/*
 .idea/icon.svg
 gradle/libs.versions.toml
-gradle-wrapper.properties
-gradle.properties
+**/gradle-wrapper.properties
+**/gradle.properties
 gradlew
 gradlew.bat
-proguard-rules.pro
+**/proguard-rules.pro
 *.xml
 *.webp
 *.png
@@ -52,3 +52,4 @@ dev/git.commit.template
 *.der
 **/*.der
 native-app-glue/Sources/AndroidNativeAppGlue/android_native_app_glue.c
+native-app-glue/Sources/AndroidNativeAppGlue/include/android_native_app_glue.h
