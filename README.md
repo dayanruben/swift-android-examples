@@ -58,3 +58,14 @@ Examples using raw JNI, without generated bridging sources:
 - **[hello-swift-raw-jni](hello-swift-raw-jni/)** - basic Swift integration that calls a Swift function.
 - **[hello-swift-raw-jni-callback](hello-swift-raw-jni-callback/)** - demonstrates bidirectional communication with Swift timer callbacks updating Android UI.
 - **[hello-swift-raw-jni-library](hello-swift-raw-jni-library/)** - shows how to package Swift code as a reusable Android library component.
+
+## Documentation
+
+The `Sources/SwiftAndroid/Documentation.docc` directory contains a DocC documentation catalog for Swift on Android. To build and preview it locally:
+
+```shell
+swift package generate-documentation --target SwiftAndroid --transform-for-static-hosting --output-path docs
+python3 -m http.server 8000 --directory docs
+```
+
+Then open <http://localhost:8000/documentation/swiftandroid> in your browser.
