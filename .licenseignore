@@ -14,6 +14,7 @@
 gradle/libs.versions.toml
 **/gradle-wrapper.properties
 **/gradle.properties
+gradle.properties
 gradlew
 gradlew.bat
 **/proguard-rules.pro
