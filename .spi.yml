@@ -1,0 +1,7 @@
+version: 1
+external_links:
+  documentation: "https://docs.swift.org/android/documentation/android"
+builder:
+  configs:
+    - documentation_targets: [SwiftAndroid]
+

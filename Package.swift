@@ -2,6 +2,8 @@
 
 import PackageDescription
 
+// Note that this product exists purely to build documentation:
+// swift package generate-documentation --target SwiftAndroid --transform-for-static-hosting --output-path dos
 let package = Package(
   name: "swift-android-examples",
   products: [
