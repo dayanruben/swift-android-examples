@@ -2,8 +2,9 @@ name: ci
 
 on:
   push:
-    #branches: [main]
   pull_request:
+  schedule:
+    - cron: '0 0 * * *'
   workflow_dispatch:
     inputs:
       swift_versions:
@@ -25,12 +26,10 @@ jobs:
       fail-fast: false
       matrix:
         swift_version: ${{ fromJSON(inputs.swift_versions || '["6.3", "nightly-main"]') }}
-        sdk_triple: ['aarch64-unknown-linux-android28']
-        ndk_version: ['r27d']
+        ndk_version: ['r27d', 'r30-beta1']
         os: ['ubuntu-latest', 'macos-latest']
     runs-on: ${{ matrix.os }}
     env:
-      SDK_TRIPLE: ${{ matrix.sdk_triple }}
       NDK_VERSION: ${{ matrix.ndk_version }}
       SWIFT_VERSION: ${{ matrix.swift_version }}
     steps:
@@ -75,14 +74,24 @@ jobs:
             exit 1
           fi
 
+      - name: Cache Android NDK
+        id: cache-ndk
+        uses: actions/cache@v4
+        with:
+          path: ~/android-ndk-${{ matrix.ndk_version }}
+          key: android-ndk-${{ runner.os }}-${{ runner.arch }}-${{ matrix.ndk_version }}
+
       - name: Install Android NDK
+        if: steps.cache-ndk.outputs.cache-hit != 'true'
         run: |
           set -euxo pipefail
           OS="$(uname -s | tr '[A-Z]' '[a-z]')"
           curl -L -o ndk.zip --retry 3 "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-${OS}.zip"
           unzip -q ndk.zip -d "$HOME"
           rm ndk.zip
-          echo "ANDROID_NDK_HOME=$HOME/android-ndk-${NDK_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Set ANDROID_NDK_HOME
+        run: echo "ANDROID_NDK_HOME=$HOME/android-ndk-${NDK_VERSION}" >> "$GITHUB_ENV"
 
       - name: Install Android Swift SDK and matching host toolchain
         # Looks up the Android Swift SDK URL and checksum from the swift.org
@@ -182,34 +191,34 @@ jobs:
               :SwiftKitCore:publishToMavenLocal
 
       - name: Build hello-swift-raw-jni APK
-        run: ./gradlew :hello-swift-raw-jni:assembleDebug --stacktrace
+        run: ./gradlew :hello-swift-raw-jni:assembleRelease --stacktrace
 
       - name: Build hello-swift-raw-jni-callback APK
-        run: ./gradlew :hello-swift-raw-jni-callback:assembleDebug --stacktrace
+        run: ./gradlew :hello-swift-raw-jni-callback:assembleRelease --stacktrace
 
       - name: Build hello-swift-raw-jni-library
-        run: ./gradlew :hello-swift-raw-jni-library:assembleDebug --stacktrace
+        run: ./gradlew :hello-swift-raw-jni-library:assembleRelease --stacktrace
 
       - name: Build native-activity APK
-        run: ./gradlew :native-activity:assembleDebug --stacktrace
+        run: ./gradlew :native-activity:assembleRelease --stacktrace
 
       - name: Build hello-swift-java APK
-        run: ./gradlew :hello-swift-java-hashing-app:assembleDebug --stacktrace
+        run: ./gradlew :hello-swift-java-hashing-app:assembleRelease --stacktrace
 
       - name: Build swift-java-weather-app APK
-        run: ./gradlew :swift-java-weather-app-weather-app:assembleDebug --stacktrace
+        run: ./gradlew :swift-java-weather-app-weather-app:assembleRelease --stacktrace
 
       - name: Build hello-cpp-swift cpp-lib
         working-directory: hello-cpp-swift/cpp-lib
         run: ./build-android-static.sh
 
       - name: Build hello-cpp-swift APK
-        run: ./gradlew :hello-cpp-swift:app:assembleDebug --stacktrace
+        run: ./gradlew :hello-cpp-swift:app:assembleRelease --stacktrace
 
       - name: Summarize APK artifacts
         if: always()
         run: |
-          echo "## APK Artifacts (${{ matrix.os }} / swift:${{ matrix.swift_version }} / ${{ matrix.sdk_triple }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "## APK Artifacts (os:${{ matrix.os }} / swift:${{ matrix.swift_version }} / ndk:${{ matrix.ndk_version }})" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Project | APK | Size |" >> "$GITHUB_STEP_SUMMARY"
           echo "|---------|-----|------|" >> "$GITHUB_STEP_SUMMARY"
@@ -231,7 +240,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: apks-${{ matrix.os }}-${{ matrix.swift_version }}-${{ matrix.sdk_triple }}-${{ matrix.ndk_version }}
+          name: apks-${{ matrix.os }}-${{ matrix.swift_version }}-${{ matrix.ndk_version }}
           path: '**/build/outputs/apk/**/*.apk'
           if-no-files-found: warn
 
