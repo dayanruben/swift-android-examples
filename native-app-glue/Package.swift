@@ -4,14 +4,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "AndroidNativeAppGlue",
-    products: [
-        .library(name: "AndroidNativeAppGlue", targets: ["AndroidNativeAppGlue"]),
-        .library(name: "AndroidOpenGL", targets: ["AndroidOpenGL"])
-    ],
-    targets: [
-        .target(name: "AndroidNativeAppGlue"),
-        .target(name: "AndroidOpenGL")
-    ],
-    cxxLanguageStandard: .cxx98
+  name: "AndroidNativeAppGlue",
+  products: [
+    .library(name: "AndroidNativeAppGlue", targets: ["AndroidNativeAppGlue"]),
+    .library(name: "AndroidOpenGL", targets: ["AndroidOpenGL"]),
+  ],
+  targets: [
+    .target(name: "AndroidNativeAppGlue"),
+    .target(name: "AndroidOpenGL"),
+  ],
+  cxxLanguageStandard: .cxx98
 )

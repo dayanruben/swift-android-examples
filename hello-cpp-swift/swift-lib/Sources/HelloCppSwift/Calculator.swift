@@ -12,16 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+  import FoundationEssentials
 #else
-import Foundation
+  import Foundation
 #endif
 import HelloWorldCpp
 
 public func addNumbers(_ a: Int32, _ b: Int32) -> Int32 {
-    return add(a, b)
+  return add(a, b)
 }
 
 public func multiplyNumbers(_ a: Int32, _ b: Int32) -> Int32 {
-    return multiply(a, b)
+  return multiply(a, b)
 }

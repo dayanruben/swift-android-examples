@@ -14,11 +14,11 @@
 
 import Crypto
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+  import FoundationEssentials
 #else
-import Foundation
+  import Foundation
 #endif
 
 public func hash(_ input: String) -> String {
-    SHA256.hash(data: Data(input.utf8)).description
+  SHA256.hash(data: Data(input.utf8)).description
 }
