@@ -2,10 +2,10 @@ name: ci
 
 on:
   push:
-  #  branches: [ main ]
+    branches: [ main ]
   pull_request:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 4 * * *'
   workflow_dispatch:
 
 permissions:
