@@ -4,11 +4,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "helloswift",
-    products: [
-        .library(name: "helloswift", type: .dynamic, targets: ["helloswift"]),
-    ],
-    targets: [
-        .target(name: "helloswift")
-    ]
+  name: "helloswift",
+  products: [
+    .library(name: "helloswift", type: .dynamic, targets: ["helloswift"])
+  ],
+  targets: [
+    .target(name: "helloswift")
+  ]
 )

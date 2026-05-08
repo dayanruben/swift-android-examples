@@ -13,7 +13,7 @@ let package = Package(
       targets: ["HelloCppSwift"])
   ],
   dependencies: [
-    .package(url: "https://github.com/swiftlang/swift-java", from: "0.1.2"),
+    .package(url: "https://github.com/swiftlang/swift-java", from: "0.1.2")
   ],
   targets: [
     .binaryTarget(
@@ -27,7 +27,7 @@ let package = Package(
         .product(name: "SwiftJava", package: "swift-java"),
       ],
       swiftSettings: [
-        .swiftLanguageMode(.v5),
+        .swiftLanguageMode(.v5)
       ],
       plugins: [
         .plugin(name: "JExtractSwiftPlugin", package: "swift-java")

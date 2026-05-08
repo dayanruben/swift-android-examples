@@ -23,10 +23,10 @@ let package = Package(
       name: "SwiftHashing",
       dependencies: [
         .product(name: "Crypto", package: "swift-crypto"),
-        .product(name: "SwiftJava", package: "swift-java")
+        .product(name: "SwiftJava", package: "swift-java"),
       ],
       swiftSettings: [
-        .swiftLanguageMode(.v5),
+        .swiftLanguageMode(.v5)
       ],
       plugins: [
         .plugin(name: "JExtractSwiftPlugin", package: "swift-java")

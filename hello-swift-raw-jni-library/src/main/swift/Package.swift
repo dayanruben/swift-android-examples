@@ -4,11 +4,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "hello-swift-raw-jni-library",
-    products: [
-        .library(name: "hello-swift-raw-jni-library", type: .dynamic, targets: ["hello-swift-raw-jni-library"]),
-    ],
-    targets: [
-        .target(name: "hello-swift-raw-jni-library")
-    ]
+  name: "hello-swift-raw-jni-library",
+  products: [
+    .library(
+      name: "hello-swift-raw-jni-library", type: .dynamic, targets: ["hello-swift-raw-jni-library"])
+  ],
+  targets: [
+    .target(name: "hello-swift-raw-jni-library")
+  ]
 )

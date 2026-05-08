@@ -1,0 +1,241 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build-examples:
+    strategy:
+      fail-fast: false
+      matrix:
+        swift_version: ['6.3', 'nightly-6.3', 'nightly-main']
+        ndk_version: ['r27d', 'r29', 'r30-beta1']
+        os: ['ubuntu-latest', 'macos-latest']
+        configuration: ['Debug', 'Release']
+    runs-on: ${{ matrix.os }}
+    env:
+      NDK_VERSION: ${{ matrix.ndk_version }}
+      SWIFT_VERSION: ${{ matrix.swift_version }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Install swiftly
+        run: |
+          set -euxo pipefail
+          if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            sudo apt-get update
+            sudo apt-get -yq install curl jq gpg unzip libcurl4-openssl-dev
+            ARCH="$(uname -m)"
+            curl -L -O --retry 3 "https://download.swift.org/swiftly/linux/swiftly-${ARCH}.tar.gz"
+            tar -xzf "swiftly-${ARCH}.tar.gz"
+            ./swiftly init \
+                --assume-yes \
+                --skip-install \
+                --no-modify-profile \
+                --quiet-shell-followup
+            rm -f "swiftly-${ARCH}.tar.gz" swiftly
+            # The example projects' Gradle scripts look for swiftly under
+            # $HOME/.local/share/swiftly/bin, which is also where the official
+            # installer puts it. Add it to PATH for subsequent steps.
+            echo "$HOME/.local/share/swiftly/bin" >> "$GITHUB_PATH"
+            "$HOME/.local/share/swiftly/bin/swiftly" --version
+          elif [[ "${RUNNER_OS}" == "macOS" ]]; then
+            curl -O https://download.swift.org/swiftly/darwin/swiftly.pkg
+            installer -pkg swiftly.pkg -target CurrentUserHomeDirectory
+            ~/.swiftly/bin/swiftly init --quiet-shell-followup
+            . "${SWIFTLY_HOME_DIR:-$HOME/.swiftly}/env.sh"
+            hash -r
+            echo "$HOME/.swiftly/bin" >> "$GITHUB_PATH"
+            "$HOME/.swiftly/bin/swiftly" --version
+          else
+            echo "Unknown OS: ${RUNNER_OS}"
+            exit 1
+          fi
+
+      - name: Cache Android NDK
+        id: cache-ndk
+        uses: actions/cache@v5
+        with:
+          path: ~/android-ndk-${{ matrix.ndk_version }}
+          key: android-ndk-${{ runner.os }}-${{ runner.arch }}-${{ matrix.ndk_version }}
+
+      - name: Install Android NDK
+        if: steps.cache-ndk.outputs.cache-hit != 'true'
+        run: |
+          set -euxo pipefail
+          OS="$(uname -s | tr '[A-Z]' '[a-z]')"
+          curl -L -o ndk.zip --retry 3 "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-${OS}.zip"
+          unzip -q ndk.zip -d "$HOME"
+          rm ndk.zip
+
+      - name: Set ANDROID_NDK_HOME
+        run: echo "ANDROID_NDK_HOME=$HOME/android-ndk-${NDK_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Install Android Swift SDK and matching host toolchain
+        # Looks up the Android Swift SDK URL and checksum from the swift.org
+        # install API and installs it via `swift sdk install`.
+        run: |
+          set -euxo pipefail
+          case "$SWIFT_VERSION" in
+            nightly-*)
+              nightly_version="${SWIFT_VERSION#nightly-}"
+              sdk_json=$(curl -fsSL "https://www.swift.org/api/v1/install/dev/${nightly_version}/android-sdk.json")
+              snapshot_tag=$(echo "$sdk_json" | jq -r '.[0].dir')
+              sdk_checksum=$(echo "$sdk_json" | jq -r '.[0].checksum')
+              if [ "$nightly_version" = "main" ]; then
+                branch="development"
+              else
+                branch="swift-${nightly_version}-branch"
+              fi
+              sdk_url="https://download.swift.org/${branch}/android-sdk/${snapshot_tag}/${snapshot_tag}_android.artifactbundle.tar.gz"
+              ;;
+            *)
+              releases_json=$(curl -fsSL "https://www.swift.org/api/v1/install/releases.json")
+              # Pick the highest patch release whose name starts with the
+              # requested version (e.g. "6.3" -> "6.3.1" if it exists).
+              latest_version=$(echo "$releases_json" | jq -r --arg v "$SWIFT_VERSION" \
+                '[.[] | select(.name | startswith($v))]
+                 | sort_by(.name | split(".") | map(tonumber? // 0))
+                 | last
+                 | .name')
+              if [ -z "$latest_version" ] || [ "$latest_version" = "null" ]; then
+                echo "Error: no Swift release matching '$SWIFT_VERSION' found in releases.json" >&2
+                exit 1
+              fi
+              sdk_checksum=$(echo "$releases_json" | jq -r --arg v "$latest_version" \
+                '.[] | select(.name == $v) | .platforms[] | select(.platform == "android-sdk") | .checksum')
+              snapshot_tag="swift-${latest_version}-RELEASE"
+              sdk_url="https://download.swift.org/swift-${latest_version}-release/android-sdk/${snapshot_tag}/${snapshot_tag}_android.artifactbundle.tar.gz"
+              ;;
+          esac
+
+          swift_install=${snapshot_tag}
+          # trim leading "swift-" and trailing "-RELEASE"
+          swift_install=${swift_install#swift-}
+          swift_install=${swift_install/-RELEASE/}
+
+          echo "Installing Android Swift SDK and host toolchain"
+          echo "  tag:      $swift_install"
+          echo "  url:      $sdk_url"
+          echo "  checksum: $sdk_checksum"
+          swiftly install "${swift_install}"
+          swift sdk install "$sdk_url" --checksum "$sdk_checksum"
+          swift sdk list
+
+          # Override the matrix-supplied SWIFT_VERSION (e.g. "6.3") with the
+          # resolved patch version (e.g. "6.3.1") so the gradle scripts pick up
+          # the actual artifactbundle directory name produced by `swift sdk
+          # install`. SWIFT_ANDROID_SDK_VERSION pins the bundle suffix for the
+          # same reason.
+          echo "SWIFT_VERSION=${swift_install}" >> "$GITHUB_ENV"
+          echo "SWIFT_ANDROID_SDK_VERSION=${snapshot_tag#swift-}_android" >> "$GITHUB_ENV"
+
+      - name: Configure Swift Android SDK
+        run: |
+          set -euo pipefail
+          # Locate the installed Android SDK artifactbundle. Its parent
+          # directory varies by OS / swiftpm version, so try the known
+          # candidates and pick the first one that actually matches.
+          shopt -s nullglob
+          candidates=(
+            "$HOME"/.swiftpm/swift-sdks/*android*.artifactbundle
+            "$HOME"/.config/swiftpm/swift-sdks/*android*.artifactbundle
+            "$HOME"/Library/org.swift.swiftpm/swift-sdks/*android*.artifactbundle
+          )
+          if [[ ${#candidates[@]} -eq 0 ]]; then
+            echo "No android SDK artifactbundle found in any known location" >&2
+            exit 1
+          fi
+          cd "${candidates[0]}"
+          # Link the SDK against the NDK we installed in the previous step.
+          # Someday we might not need this script, so gracefully skip it
+          # if it does not exist.
+          if [[ -x "./swift-android/scripts/setup-android-sdk.sh" ]]; then
+            "./swift-android/scripts/setup-android-sdk.sh"
+          fi
+
+      - name: Publish swift-java packages to local Maven
+        # The hashing-lib, weather-lib, and hello-cpp-swift/swift-lib modules
+        # depend on org.swift.swiftkit:swiftkit-core:1.0-SNAPSHOT, which is not
+        # published to a public Maven repo. The hashing-lib README documents
+        # publishing it to mavenLocal from the swift-java checkout that
+        # SwiftPM resolves into .build/checkouts/swift-java.
+        working-directory: hello-swift-java/hashing-lib
+        run: |
+          set -euxo pipefail
+          swift package resolve
+          ./.build/checkouts/swift-java/gradlew \
+              --project-dir .build/checkouts/swift-java \
+              :SwiftKitCore:publishToMavenLocal
+
+      - name: Build hello-swift-raw-jni APK
+        run: ./gradlew :hello-swift-raw-jni:assemble${{ matrix.configuration }} --stacktrace
+
+      - name: Build hello-swift-raw-jni-callback APK
+        run: ./gradlew :hello-swift-raw-jni-callback:assemble${{ matrix.configuration }} --stacktrace
+
+      - name: Build hello-swift-raw-jni-library
+        run: ./gradlew :hello-swift-raw-jni-library:assemble${{ matrix.configuration }} --stacktrace
+
+      - name: Build native-activity APK
+        run: ./gradlew :native-activity:assemble${{ matrix.configuration }} --stacktrace
+
+      - name: Build hello-swift-java APK
+        run: ./gradlew :hello-swift-java-hashing-app:assemble${{ matrix.configuration }} --stacktrace
+
+      - name: Build swift-java-weather-app APK
+        run: ./gradlew :swift-java-weather-app-weather-app:assemble${{ matrix.configuration }} --stacktrace
+
+      - name: Build hello-cpp-swift cpp-lib
+        working-directory: hello-cpp-swift/cpp-lib
+        run: ./build-android-static.sh
+
+      - name: Build hello-cpp-swift APK
+        run: ./gradlew :hello-cpp-swift:app:assemble${{ matrix.configuration }} --stacktrace
+
+      - name: Summarize APK artifacts
+        if: always()
+        run: |
+          echo "## APK Artifacts (os:${{ matrix.os }} / swift:${{ matrix.swift_version }} / ndk:${{ matrix.ndk_version }}) / configuration:${{ matrix.configuration }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Project | APK | Size |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---------|-----|------|" >> "$GITHUB_STEP_SUMMARY"
+          found=0
+          while IFS= read -r apk; do
+            found=1
+            # Derive a human-readable project name from the path
+            project=$(echo "$apk" | sed -E 's#^\./##; s#/build/outputs/.*##')
+            name=$(basename "$apk")
+            # Human-readable size (du -h works on both Linux and macOS)
+            size=$(du -h "$apk" | cut -f1 | tr -d '[:space:]')
+            echo "| \`$project\` | \`$name\` | $size |" >> "$GITHUB_STEP_SUMMARY"
+          done < <(find . -path '*/build/outputs/apk/*.apk' -type f | sort)
+          if [ "$found" -eq 0 ]; then
+            echo "| _(none)_ | — | — |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload APK artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: apks-${{ matrix.os }}-${{ matrix.swift_version }}-${{ matrix.ndk_version }}
+          path: '**/build/outputs/apk/**/*.apk'
+          if-no-files-found: warn
