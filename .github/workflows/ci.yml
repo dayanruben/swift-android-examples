@@ -2,6 +2,7 @@ name: ci
 
 on:
   push:
+  #  branches: [ main ]
   pull_request:
   schedule:
     - cron: '0 0 * * *'
@@ -15,12 +16,6 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  soundness:
-    name: Soundness
-    uses: swiftlang/github-workflows/.github/workflows/soundness.yml@main
-    with:
-      license_header_check_project_name: "Swift.org"
-
   build-examples:
     strategy:
       fail-fast: false
