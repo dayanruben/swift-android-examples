@@ -2,10 +2,6 @@
 
 Use Swift to build native libraries and applications for Android
 
-@Metadata {
-  @TechnologyRoot
-}
-
 ## Topics
 
 ### Getting Started
