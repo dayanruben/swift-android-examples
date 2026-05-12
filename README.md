@@ -61,7 +61,7 @@ Examples using raw JNI, without generated bridging sources:
 
 ## Documentation
 
-The `Sources/SwiftAndroid/Documentation.docc` directory contains a DocC documentation catalog for Swift on Android. To build and preview it locally:
+The `Sources/SwiftAndroid/SwiftAndroid.docc` directory contains a DocC documentation catalog for Swift on Android. To build and preview it locally:
 
 ```shell
 swift package generate-documentation --target SwiftAndroid --transform-for-static-hosting --output-path docs
