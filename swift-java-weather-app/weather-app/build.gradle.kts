@@ -65,7 +65,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
-    implementation("org.swift.swiftkit:swiftkit-core:1.0-SNAPSHOT")
+    implementation("org.swift.swiftkit:swiftkit-core:+")
     implementation(project(":swift-java-weather-app-weather-lib"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
