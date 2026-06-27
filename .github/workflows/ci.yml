@@ -226,6 +226,23 @@ jobs:
               --project-dir .build/checkouts/swift-java \
               :SwiftKitCore:publishToMavenLocal
 
+          # Debug: list everything that actually landed in the local Maven
+          # repository so we can see why org.swift.swiftkit:swiftkit-core:
+          # 1.0-SNAPSHOT may be missing.
+          maven_local="${HOME}/.m2/repository"
+          echo "::group::Local Maven repository contents (${maven_local})"
+          if [[ -d "${maven_local}" ]]; then
+            # Every published artifact has a .pom; list them to enumerate the
+            # installed group:artifact:version coordinates.
+            find "${maven_local}" -name '*.pom' -print | sort
+            echo "--- swiftkit-core specifically ---"
+            find "${maven_local}" -path '*swift*swiftkit*' -print | sort \
+              || echo "No org.swift.swiftkit artifacts found in local Maven repository"
+          else
+            echo "Local Maven repository does not exist at ${maven_local}"
+          fi
+          echo "::endgroup::"
+
       - name: Build hello-swift-raw-jni APK
         run: ./gradlew :hello-swift-raw-jni:assemble${{ matrix.configuration }} --stacktrace
 
