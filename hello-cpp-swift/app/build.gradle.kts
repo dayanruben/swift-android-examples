@@ -56,6 +56,6 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.constraintlayout)
-    implementation("org.swift.swiftkit:swiftkit-core:1.0-SNAPSHOT")
+    implementation("org.swift.swiftkit:swiftkit-core:+")
     implementation(project(":hello-cpp-swift:swift-lib"))
 }
